@@ -1,0 +1,38 @@
+[
+  {
+    "id": "bread",
+    "name": "面包",
+    "locales": { "en-US": { "name": "Bread" } },
+    "type": "food",
+    "price": 5,
+    "duration": 10,
+    "effects": {
+      "hunger": -30
+    }
+  },
+  {
+    "id": "steak",
+    "name": "牛排",
+    "locales": { "en-US": { "name": "Steak" } },
+    "type": "food",
+    "price": 20,
+    "duration": 10,
+    "effects": {
+      "hunger": -60,
+      "mood": 10
+    }
+  },
+  {
+    "id": "feast",
+    "name": "大餐",
+    "locales": { "en-US": { "name": "Feast" } },
+    "type": "food",
+    "price": 50,
+    "duration": 10,
+    "effects": {
+      "hunger": -100,
+      "mood": 20,
+      "health": 10
+    }
+  }
+]

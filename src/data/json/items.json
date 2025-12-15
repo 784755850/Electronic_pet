@@ -1,0 +1,177 @@
+{
+  "food": [
+    {
+      "id": "bread",
+      "name": "面包",
+      "locales": { "en-US": { "name": "Bread" } },
+      "type": "food",
+      "price": 5,
+      "duration": 10,
+      "effects": {
+        "hunger": -30
+      }
+    },
+    {
+      "id": "steak",
+      "name": "牛排",
+      "locales": { "en-US": { "name": "Steak" } },
+      "type": "food",
+      "price": 20,
+      "duration": 10,
+      "effects": {
+        "hunger": -60,
+        "mood": 10
+      }
+    },
+    {
+      "id": "feast",
+      "name": "大餐",
+      "locales": { "en-US": { "name": "Feast" } },
+      "type": "food",
+      "price": 50,
+      "duration": 10,
+      "effects": {
+        "hunger": -100,
+        "mood": 20,
+        "health": 10
+      }
+    }
+  ],
+  "clean": [
+    {
+      "id": "soap",
+      "name": "香皂",
+      "locales": { "en-US": { "name": "Soap" } },
+      "type": "clean",
+      "price": 10,
+      "duration": 20,
+      "effects": {
+        "clean": 40
+      }
+    },
+    {
+      "id": "shower_gel",
+      "name": "沐浴露",
+      "locales": { "en-US": { "name": "Shower Gel" } },
+      "type": "clean",
+      "price": 30,
+      "duration": 20,
+      "effects": {
+        "clean": 80,
+        "mood": 5
+      }
+    }
+  ],
+  "toy": [
+    {
+      "id": "ball",
+      "name": "皮球",
+      "locales": { "en-US": { "name": "Ball" } },
+      "type": "toy",
+      "price": 15,
+      "duration": 15,
+      "effects": {
+        "mood": 20
+      },
+      "durability": 5
+    },
+    {
+      "id": "rc_car",
+      "name": "遥控车",
+      "locales": { "en-US": { "name": "RC Car" } },
+      "type": "toy",
+      "price": 50,
+      "duration": 15,
+      "effects": {
+        "mood": 35
+      },
+      "durability": 10
+    },
+    {
+      "id": "game_console",
+      "name": "游戏机",
+      "locales": { "en-US": { "name": "Game Console" } },
+      "type": "toy",
+      "price": 100,
+      "duration": 15,
+      "effects": {
+        "mood": 50
+      },
+      "durability": 20
+    }
+  ],
+  "medicine": [
+    {
+      "id": "cold_medicine",
+      "name": "感冒药",
+      "locales": { "en-US": { "name": "Cold Medicine" } },
+      "type": "medicine",
+      "price": 20,
+      "duration": 5,
+      "effects": {
+        "cure": true,
+        "mood": -5
+      }
+    },
+    {
+      "id": "nutrition",
+      "name": "营养剂",
+      "locales": { "en-US": { "name": "Nutrition Supplement" } },
+      "type": "medicine",
+      "price": 50,
+      "duration": 5,
+      "effects": {
+        "health": 50,
+        "hunger": -20
+      }
+    }
+  ],
+  "special": [
+    {
+      "id": "ancient_coin",
+      "name": "古老的金币",
+      "locales": { "en-US": { "name": "Ancient Coin" } },
+      "type": "special",
+      "price": 500,
+      "effects": {
+        "mood": 5
+      },
+      "description": "虽然不能吃，但看起来很值钱。"
+    },
+    {
+      "id": "mystic_herb",
+      "name": "神秘草药",
+      "locales": { "en-US": { "name": "Mystic Herb" } },
+      "type": "special",
+      "price": 100,
+      "effects": {
+        "health": 80,
+        "clean": -20
+      },
+      "description": "味道很怪，但对身体很好。"
+    },
+    {
+      "id": "alien_chip",
+      "name": "外星芯片",
+      "locales": { "en-US": { "name": "Alien Chip" } },
+      "type": "special",
+      "price": 1000,
+      "effects": {
+        "intelligence": 5
+      },
+      "description": "蕴含着未知的科技力量。"
+    },
+    {
+      "id": "golden_feather",
+      "name": "金羽毛",
+      "locales": { "en-US": { "name": "Golden Feather" } },
+      "type": "special",
+      "price": 800,
+      "effects": {
+        "charm": 5,
+        "mood": 50
+      },
+      "description": "闪闪发光的羽毛，让人爱不释手。"
+    }
+  ]
+}

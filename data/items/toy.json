@@ -1,0 +1,38 @@
+[
+  {
+    "id": "ball",
+    "name": "皮球",
+    "locales": { "en-US": { "name": "Ball" } },
+    "type": "toy",
+    "price": 15,
+    "duration": 15,
+    "effects": {
+      "mood": 20
+    },
+    "durability": 5
+  },
+  {
+    "id": "rc_car",
+    "name": "遥控车",
+    "locales": { "en-US": { "name": "RC Car" } },
+    "type": "toy",
+    "price": 50,
+    "duration": 15,
+    "effects": {
+      "mood": 35
+    },
+    "durability": 10
+  },
+  {
+    "id": "game_console",
+    "name": "游戏机",
+    "locales": { "en-US": { "name": "Game Console" } },
+    "type": "toy",
+    "price": 100,
+    "duration": 15,
+    "effects": {
+      "mood": 50
+    },
+    "durability": 20
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "cold_medicine",
+    "name": "感冒药",
+    "locales": { "en-US": { "name": "Cold Medicine" } },
+    "type": "medicine",
+    "price": 20,
+    "duration": 5,
+    "effects": {
+      "cure": true,
+      "mood": -5
+    }
+  },
+  {
+    "id": "nutrition",
+    "name": "营养剂",
+    "locales": { "en-US": { "name": "Nutrition Supplement" } },
+    "type": "medicine",
+    "price": 50,
+    "duration": 5,
+    "effects": {
+      "health": 50,
+      "hunger": -20
+    }
+  }
+]

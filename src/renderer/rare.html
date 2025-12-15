@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>异色稀有成熟期变种</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      /* image-rendering: pixelated; */
+    }
+    
+    body {
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: #2a2a3a;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    /* 深灰像素格背景 */
+    .pixel-grid-bg {
+      background-image: 
+        linear-gradient(45deg, #252535 25%, transparent 25%),
+        linear-gradient(-45deg, #252535 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #252535 75%),
+        linear-gradient(-45deg, transparent 75%, #252535 75%);
+      background-size: 8px 8px;
+      background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+    }
+    
+    .container {
+      background: #1a1a2a;
+      border: 4px solid #8a7a5a;
+      box-shadow: 
+        inset -4px -4px 0 #0a0a1a,
+        inset 4px 4px 0 #3a3a4a,
+        0 0 20px rgba(200, 170, 100, 0.3);
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #c8aa6a;
+      padding: 8px 16px;
+      margin-bottom: 16px;
+      border: 2px solid #8a7a5a;
+      background: linear-gradient(180deg, #3a3a4a 0%, #2a2a3a 100%);
+      text-shadow: 1px 1px 0 #1a1a2a;
+      letter-spacing: 2px;
+      -webkit-app-region: drag;
+    }
+    
+    .rarity-tag {
+      display: inline-block;
+      font-size: 12px;
+      color: #ffd700;
+      background: #4a3a2a;
+      padding: 2px 8px;
+      border: 1px solid #c8aa6a;
+      margin-bottom: 12px;
+    }
+    
+    .preview-box {
+      width: 160px;
+      height: 160px;
+      margin: 0 auto;
+      background: #151520;
+      border: 4px solid #4a4a5a;
+      box-shadow: 
+        inset 0 0 20px rgba(200, 170, 100, 0.1),
+        0 0 10px rgba(200, 170, 100, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* 背景星光 */
+    .star {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #c8aa6a;
+      animation: twinkle 1s infinite;
+    }
+    .star:nth-child(1) { top: 10%; left: 15%; animation-delay: 0s; }
+    .star:nth-child(2) { top: 20%; right: 20%; animation-delay: 0.3s; }
+    .star:nth-child(3) { bottom: 25%; left: 10%; animation-delay: 0.6s; }
+    .star:nth-child(4) { bottom: 15%; right: 15%; animation-delay: 0.9s; }
+    
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+    
+    #rare-canvas {
+      width: 128px;
+      height: 128px;
+      z-index: 1;
+    }
+    
+    .info {
+      margin-top: 16px;
+      font-size: 10px;
+      color: #8a8a9a;
+    }
+    
+    .color-legend {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      font-size: 9px;
+      color: #6a6a7a;
+    }
+    
+    .color-box {
+      width: 10px;
+      height: 10px;
+      border: 1px solid #4a4a5a;
+      margin-right: 4px;
+    }
+    
+    .close-btn {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      width: 24px;
+      height: 24px;
+      background: #2b2b2b;
+      border: 2px solid #4a4a6a;
+      color: #c8d8c8;
+      font-size: 16px;
+      line-height: 20px;
+      text-align: center;
+      cursor: pointer;
+      z-index: 100;
+      -webkit-app-region: no-drag;
+    }
+    .close-btn:hover {
+      background: #4a4a6a;
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="pixel-grid-bg">
+  <div class="close-btn" id="close-btn">×</div>
+  <div class="container">
+    <div class="title" data-i18n="rare.title">★ 异色稀有变种 ★</div>
+    <div class="rarity-tag" data-i18n="rare.tag">✦ RARE ✦</div>
+    
+    <div class="preview-box">
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <div class="star"></div>
+      <canvas id="rare-canvas" width="64" height="64"></canvas>
+    </div>
+    
+    <div class="info" data-i18n="rare.info">64×64 像素 · 鎏金异色</div>
+    
+    <div class="color-legend">
+      <div class="legend-item" data-i18n="rare.legend.gold">
+        <div class="color-box" style="background:#c8aa6a"></div>鎏金
+      </div>
+      <div class="legend-item" data-i18n="rare.legend.light_purple">
+        <div class="color-box" style="background:#a89aca"></div>浅紫
+      </div>
+      <div class="legend-item" data-i18n="rare.legend.silver">
+        <div class="color-box" style="background:#e8e8f8"></div>浅银
+      </div>
+      <div class="legend-item" data-i18n="rare.legend.dark_purple">
+        <div class="color-box" style="background:#6a5a8a"></div>深紫
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    let i18nData = {}
+
+    function t(key, params) {
+      const keys = key.split('.')
+      let v = i18nData
+      for (const k of keys) {
+        if (v && v[k]) v = v[k]
+        else return key
+      }
+      if (typeof v === 'string' && params) {
+        return v.replace(/\{(\w+)\}/g, (_, k) => String(params[k] || `{${k}}`))
+      }
+      return v || key
+    }
+
+    function updateTexts() {
+      document.title = t('rare.title')
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n')
+        // For legend items which have children (color-box), we need to preserve the child
+        if (el.classList.contains('legend-item')) {
+           const colorBox = el.querySelector('.color-box')
+           el.textContent = t(key)
+           if (colorBox) el.prepend(colorBox)
+        } else {
+           el.textContent = t(key)
+        }
+      })
+    }
+
+    if (window.electronAPI) {
+      window.electronAPI.getI18nData().then(data => {
+        i18nData = data
+        updateTexts()
+      })
+      window.electronAPI.onLanguageChange((data) => {
+        i18nData = data
+        updateTexts()
+      })
+    }
+
+    // 稀有色系
+    const RARE_COLORS = {
+      transparent: 'transparent',
+      darkPurple: '#3a2a5a',    // 1 - 深紫描边
+      midPurple: '#6a5a8a',     // 2 - 中紫
+      lightPurple: '#a89aca',   // 3 - 浅紫
+      gold: '#c8aa6a',          // 4 - 鎏金
+      brightGold: '#e8ca8a',    // 5 - 亮金
+      darkGold: '#8a6a3a',      // 6 - 深金
+      silver: '#e8e8f8',        // 7 - 浅银高光
+      darkBrown: '#4a3a2a',     // 8 - 深棕(皇冠描边)
+      white: '#f8f8ff'          // 9 - 纯白闪光
+    }
+    
+    // 异色稀有成熟期 32x32 精灵 (显示为64x64)
+    // 包含：双层鎏金心形 + 迷你皇冠 + 渐变花纹 + 浅银描边 + 星光
+    const RARE_ADULT_FRAME1 = [
+      // 星光点缀 + 皇冠 + 心形
+      [0,0,0,0,0,0,0,0,0,9,0,0,0,0,0,0,0,0,0,0,0,0,9,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,9,9,9,0,0,0,0,0,0,0,0,0,0,9,9,9,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,9,0,0,0,0,0,0,0,0,0,0,0,0,9,0,0,0,0,0,0,0,0,0],
+      // 皇冠 (8x8)
+      [0,0,0,0,0,0,0,0,0,0,0,0,8,4,4,4,4,4,4,8,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,8,4,5,4,8,8,4,5,4,8,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,8,4,4,4,4,4,4,4,4,8,0,0,0,0,0,0,0,0,0,0,0],
+      // 双层心形 (鎏金外层 + 浅紫内层)
+      [0,0,0,0,0,0,0,0,4,4,4,0,0,0,0,0,0,0,0,0,4,4,4,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,4,5,3,3,4,0,0,0,0,0,0,0,4,3,3,5,4,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,4,3,3,3,3,4,4,4,4,4,4,4,3,3,3,3,4,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,4,3,3,3,3,3,3,3,3,3,3,3,3,3,4,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,4,3,3,3,3,3,3,3,3,3,3,3,4,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,4,3,3,3,3,3,3,3,3,3,4,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,4,3,3,3,3,3,3,3,4,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,4,3,3,3,3,3,4,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,4,4,4,4,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      // 宠物本体 (浅银描边)
+      [0,0,0,0,0,0,0,0,0,7,7,7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,7,3,3,7,3,3,3,3,3,3,7,3,3,3,7,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,7,3,7,3,3,3,4,3,3,3,4,3,3,3,7,3,7,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,7,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,7,0,0,0,0,0,0,0],
+      [0,0,9,0,0,0,7,3,3,1,7,1,3,3,3,3,3,3,3,1,7,1,3,3,7,0,0,0,9,0,0,0],
+      [0,9,9,9,0,0,7,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,7,0,0,9,9,9,0,0],
+      [0,0,9,0,0,0,7,3,3,3,3,3,3,1,1,1,1,1,1,3,3,3,3,3,7,0,0,0,9,0,0,0],
+      // 身体渐变花纹 (浅紫→鎏金)
+      [0,0,0,0,0,0,0,7,3,3,4,3,3,3,3,3,3,3,3,3,3,4,3,7,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,7,3,4,5,4,3,4,3,3,3,4,3,4,5,4,3,7,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,7,3,4,3,4,5,4,3,4,5,4,3,4,3,7,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,7,3,3,4,5,4,3,3,3,4,5,4,3,3,7,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,7,3,3,4,3,3,3,3,3,4,3,3,7,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,7,3,3,3,3,3,3,3,3,3,7,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,7,3,3,3,3,3,3,3,7,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,7,3,3,7,0,0,7,3,3,7,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,7,7,7,7,0,0,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ]
+    
+    // 动画帧2 (心形金边闪烁 + 星光切换)
+    const RARE_ADULT_FRAME2 = [
+      // 星光位置切换
+      [0,0,0,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,0,0,0],
+      [0,0,9,9,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,9,9,0,0],
+      [0,0,0,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,0,0,0],
+      // 皇冠 (亮金闪烁)
+      [0,0,0,0,0,0,0,0,0,0,0,0,8,5,5,5,5,5,5,8,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,8,5,4,5,8,8,5,4,5,8,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,8,5,5,5,5,5,5,5,5,8,0,0,0,0,0,0,0,0,0,0,0],
+      // 双层心形 (金边变亮)
+      [0,0,0,0,0,0,0,0,5,5,5,0,0,0,0,0,0,0,0,0,5,5,5,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,5,4,3,3,5,0,0,0,0,0,0,0,5,3,3,4,5,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,5,3,3,3,3,5,5,5,5,5,5,5,3,3,3,3,5,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,5,3,3,3,3,3,3,3,3,3,3,3,3,3,5,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,5,3,3,3,3,3,3,3,3,3,3,3,5,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,5,3,3,3,3,3,3,3,3,3,5,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,5,3,3,3,3,3,3,3,5,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,5,3,3,3,3,3,5,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,5,5,5,5,5,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+      // 宠物本体 (相同)
+      [0,0,0,0,0,0,0,0,0,7,7,7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,7,3,3,7,3,3,3,3,3,3,7,3,3,3,7,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,7,3,7,3,3,3,4,3,3,3,4,3,3,3,7,3,7,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,7,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,7,0,0,0,0,0,0,0],
+      [0,0,0,0,9,0,7,3,3,1,7,1,3,3,3,3,3,3,3,1,7,1,3,3,7,0,9,0,0,0,0,0],
+      [0,0,0,9,9,9,7,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,7,9,9,9,0,0,0,0],
+      [0,0,0,0,9,0,7,3,3,3,3,3,3,1,1,1,1,1,1,3,3,3,3,3,7,0,9,0,0,0,0,0],
+      // 身体花纹
+      [0,0,0,0,0,0,0,7,3,3,4,3,3,3,3,3,3,3,3,3,3,4,3,7,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,7,3,4,5,4,3,4,3,3,3,4,3,4,5,4,3,7,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,7,3,4,3,4,5,4,3,4,5,4,3,4,3,7,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,7,3,3,4,5,4,3,3,3,4,5,4,3,3,7,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,7,3,3,4,3,3,3,3,3,4,3,3,7,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,7,3,3,3,3,3,3,3,3,3,7,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,7,3,3,3,3,3,3,3,7,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,7,3,3,7,0,0,7,3,3,7,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,7,7,7,7,0,0,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ]
+    
+    const baseMap = [RARE_COLORS.transparent,RARE_COLORS.darkPurple,RARE_COLORS.midPurple,RARE_COLORS.lightPurple,RARE_COLORS.gold,RARE_COLORS.brightGold,RARE_COLORS.darkGold,RARE_COLORS.silver,RARE_COLORS.darkBrown,RARE_COLORS.white]
+    const angryMap = [RARE_COLORS.transparent,'#2a1222','#8a4a5a','#ca8a9a',RARE_COLORS.gold,RARE_COLORS.brightGold,RARE_COLORS.darkGold,RARE_COLORS.silver,RARE_COLORS.darkBrown,'#ff4a4a']
+    function cloneMatrix(m){return m.map(r=>r.slice())}
+    function expandHeart(m,level){const h=cloneMatrix(m);const dirs=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1]];for(let y=0;y<h.length;y++){for(let x=0;x<h[y].length;x++){const v=h[y][x];if(v===3||v===4){for(let l=1;l<=level;l++){for(const d of dirs){const nx=x+d[0]*l,ny=y+d[1]*l;if(ny>=0&&ny<h.length&&nx>=0&&nx<h[ny].length){if(h[ny][nx]===0)h[ny][nx]=4}}}}}}return h}
+    let currentFrame = 0
+    const angryFrames = [
+      expandHeart(RARE_ADULT_FRAME1,1),
+      expandHeart(RARE_ADULT_FRAME2,2),
+      expandHeart(RARE_ADULT_FRAME1,3),
+      expandHeart(RARE_ADULT_FRAME2,4)
+    ]
+    function drawSprite(canvas, spriteData, map) {
+      const ctx = canvas.getContext('2d')
+      ctx.clearRect(0, 0, 64, 64)
+      
+      const scale = 2 // 32x32 -> 64x64
+      
+      for (let y = 0; y < spriteData.length; y++) {
+        for (let x = 0; x < spriteData[y].length; x++) {
+          const pixel = spriteData[y][x]
+          if (pixel === 0) continue
+          
+          ctx.fillStyle = map[pixel]
+          ctx.fillRect(x * scale, y * scale, scale, scale)
+        }
+      }
+    }
+    
+    function animate() {
+      const canvas = document.getElementById('rare-canvas')
+      drawSprite(canvas, angryFrames[currentFrame], currentFrame%2===0?angryMap:angryMap)
+      currentFrame = (currentFrame + 1) % angryFrames.length
+    }
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      animate()
+      setInterval(animate, 375)
+    })
+  </script>
+</body>
+</html>

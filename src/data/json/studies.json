@@ -1,0 +1,92 @@
+[
+  {
+    "id": "kindergarten_basic",
+    "name": "幼儿园基础",
+    "cost": 10,
+    "duration": 0.5,
+    "requirements": {
+      "stages": ["baby"]
+    },
+    "cost_stats": {
+      "hunger": 5,
+      "mood": 5
+    },
+    "effect": {
+      "intelligence": 2,
+      "exp": 20
+    }
+  },
+  {
+    "id": "primary_school_math",
+    "name": "小学数学",
+    "cost": 50,
+    "duration": 1,
+    "preReqStudyId": "kindergarten_basic",
+    "requirements": {
+      "stages": ["baby", "adult"]
+    },
+    "cost_stats": {
+      "hunger": 10,
+      "mood": 10
+    },
+    "effect": {
+      "intelligence": 5,
+      "exp": 50
+    }
+  },
+  {
+    "id": "middle_school_physics",
+    "name": "中学物理",
+    "cost": 100,
+    "duration": 2,
+    "preReqStudyId": "primary_school_math",
+    "requirements": {
+      "stages": ["adult"]
+    },
+    "cost_stats": {
+      "hunger": 15,
+      "mood": 15
+    },
+    "effect": {
+      "intelligence": 10,
+      "exp": 100
+    }
+  },
+  {
+    "id": "gym_basic",
+    "name": "基础体能",
+    "cost": 20,
+    "duration": 1,
+    "requirements": {
+      "stages": ["baby", "adult"]
+    },
+    "cost_stats": {
+      "hunger": 20,
+      "clean": 10
+    },
+    "effect": {
+      "strength": 5,
+      "endurance": 2,
+      "exp": 30
+    }
+  },
+  {
+    "id": "gym_advanced",
+    "name": "进阶格斗",
+    "cost": 80,
+    "duration": 2,
+    "preReqStudyId": "gym_basic",
+    "requirements": {
+      "stages": ["adult"]
+    },
+    "cost_stats": {
+      "hunger": 30,
+      "clean": 20
+    },
+    "effect": {
+      "strength": 10,
+      "dexterity": 5,
+      "exp": 80
+    }
+  }
+]

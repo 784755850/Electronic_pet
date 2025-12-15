@@ -1,0 +1,25 @@
+[
+  {
+    "id": "soap",
+    "name": "香皂",
+    "locales": { "en-US": { "name": "Soap" } },
+    "type": "clean",
+    "price": 10,
+    "duration": 20,
+    "effects": {
+      "clean": 40
+    }
+  },
+  {
+    "id": "shower_gel",
+    "name": "沐浴露",
+    "locales": { "en-US": { "name": "Shower Gel" } },
+    "type": "clean",
+    "price": 30,
+    "duration": 20,
+    "effects": {
+      "clean": 80,
+      "mood": 5
+    }
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "park",
+    "name": "附近公园",
+    "description": "一个和平的公园，适合散步。",
+    "cost": 10,
+    "duration": 20,
+    "riskLevel": "low",
+    "requirements": {
+      "level": 0
+    }
+  },
+  {
+    "id": "forest",
+    "name": "迷雾森林",
+    "description": "充满未知的森林，可能发现珍稀草药。",
+    "cost": 20,
+    "duration": 30,
+    "riskLevel": "medium",
+    "requirements": {
+      "level": 5,
+      "dexterity": 10
+    }
+  },
+  {
+    "id": "city",
+    "name": "赛博城区",
+    "description": "繁华但危险的都市，机遇与风险并存。",
+    "cost": 30,
+    "duration": 40,
+    "riskLevel": "high",
+    "requirements": {
+      "level": 10,
+      "intelligence": 20
+    }
+  },
+  {
+    "id": "ruins",
+    "name": "古老遗迹",
+    "description": "沉睡千年的遗迹，传说埋藏着古币和金羽毛。",
+    "cost": 40,
+    "duration": 60,
+    "riskLevel": "high",
+    "requirements": {
+      "level": 15,
+      "strength": 30
+    }
+  },
+  {
+    "id": "space_station",
+    "name": "星际空间站",
+    "description": "通往宇宙的门户，可能有外星科技产物。",
+    "cost": 50,
+    "duration": 120,
+    "riskLevel": "high",
+    "requirements": {
+      "level": 20,
+      "intelligence": 50,
+      "endurance": 40
+    }
+  }
+]

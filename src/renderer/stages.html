@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宠物成长阶段预览</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      /* image-rendering: pixelated; */
+    }
+    
+    body {
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: #c8c8c8;
+      height: 100vh;
+      width: 100vw;
+      padding: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
+    
+    /* 16x16像素格纹理背景 */
+    .pixel-grid-bg {
+      background-image: 
+        linear-gradient(45deg, #b8b8b8 25%, transparent 25%),
+        linear-gradient(-45deg, #b8b8b8 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #b8b8b8 75%),
+        linear-gradient(-45deg, transparent 75%, #b8b8b8 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    }
+    
+    .container {
+      flex: 1;
+      max-width: 400px; /* 限制宽度以获得更好的外观 */
+    margin: 0 auto;
+      background: #e8e8e8;
+      border: 4px solid #2a2a4a;
+      box-shadow: 
+        inset -4px -4px 0 #a8a8a8,
+        inset 4px 4px 0 #ffffff,
+        8px 8px 0 rgba(0,0,0,0.3);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .title {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #2a2a4a;
+      padding: 8px;
+      margin-bottom: 12px;
+      border-bottom: 4px solid #4a4a6a;
+      letter-spacing: 4px;
+      flex-shrink: 0;
+    }
+    
+    /* 标签页 */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+    
+    .tab {
+      flex: 1;
+      height: 32px;
+      background: #d8d8d8;
+      border: 2px solid #4a4a6a;
+      border-bottom: none;
+      color: #6a6a8a;
+      font-size: 14px;
+      text-align: center;
+      line-height: 28px;
+      cursor: pointer;
+    }
+    
+    .tab.active {
+      background: #303040;
+      color: #c8d8c8;
+      height: 34px;
+      margin-top: -2px;
+      border-bottom: 2px solid #303040;
+      z-index: 1;
+      font-weight: bold;
+    }
+    
+    .content-area {
+      flex: 1;
+      background: #303040;
+      border: 2px solid #1a1a2e;
+      position: relative;
+      margin-top: -2px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .tab-content {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+    }
+    
+    .tab-content.active {
+      display: flex;
+    }
+    
+    .stage-label {
+      font-size: 14px;
+      font-weight: bold;
+      color: #c8d8c8;
+      margin-bottom: 16px;
+      padding: 4px 12px;
+      background: #1a1a2e;
+      border: 2px solid #4a4a6a;
+    }
+    
+    .stage-box {
+      background: #2a2a3a;
+      border: 4px solid #1a1a2e;
+      box-shadow: 
+        inset -2px -2px 0 #202030,
+        inset 2px 2px 0 #404050;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .stage-box.baby { width: 80px; height: 80px; }
+    .stage-box.teen { width: 112px; height: 112px; }
+    .stage-box.adult { width: 144px; height: 144px; }
+    
+    canvas {
+      image-rendering: pixelated;
+    }
+    
+    .stage-info {
+      font-size: 12px;
+      color: #8a8aaa;
+      margin-top: 8px;
+    }
+    
+    .legend {
+      margin-top: 12px;
+      padding: 8px;
+      background: #d8d8d8;
+      border: 2px solid #4a4a6a;
+      flex-shrink: 0;
+    }
+    
+    .legend-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: #2a2a4a;
+      margin-bottom: 4px;
+    }
+    
+    .legend-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      color: #4a4a6a;
+    }
+    
+    .color-box {
+      width: 10px;
+      height: 10px;
+      border: 1px solid #2a2a4a;
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body class="pixel-grid-bg">
+  <div class="container">
+    <div class="title" data-i18n="stages.title">◆ 宠物成长阶段 ◆</div>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('stage1')" data-i18n="stages.tabs.baby">幼生</div>
+      <div class="tab" onclick="switchTab('stage2')" data-i18n="stages.tabs.teen">成长</div>
+      <div class="tab" onclick="switchTab('stage3')" data-i18n="stages.tabs.adult">成熟</div>
+      <div class="tab" onclick="switchTab('stage4')" data-i18n="stages.tabs.rare">稀有</div>
+    </div>
+    
+    <div class="content-area">
+      <!-- Stage 1 -->
+      <div id="tab-stage1" class="tab-content active">
+        <div class="stage-label" data-i18n="stages.labels.baby">幼生期</div>
+        <div class="stage-box baby">
+          <canvas id="stage1" width="64" height="64"></canvas>
+        </div>
+        <div class="stage-info" data-i18n="stages.pixels" data-i18n-params='{"size":32}'>32×32 像素</div>
+      </div>
+      
+      <!-- Stage 2 -->
+      <div id="tab-stage2" class="tab-content">
+        <div class="stage-label" data-i18n="stages.labels.teen">成长期</div>
+        <div class="stage-box teen">
+          <canvas id="stage2" width="96" height="96"></canvas>
+        </div>
+        <div class="stage-info" data-i18n="stages.pixels" data-i18n-params='{"size":48}'>48×48 像素</div>
+      </div>
+      
+      <!-- Stage 3 -->
+      <div id="tab-stage3" class="tab-content">
+        <div class="stage-label" data-i18n="stages.labels.adult">成熟期</div>
+        <div class="stage-box adult">
+          <canvas id="stage3" width="128" height="128"></canvas>
+        </div>
+        <div class="stage-info" data-i18n="stages.pixels" data-i18n-params='{"size":64}'>64×64 像素</div>
+      </div>
+      
+      <!-- Stage 4 -->
+      <div id="tab-stage4" class="tab-content">
+        <div class="stage-label" data-i18n="stages.labels.rare">稀有成熟期</div>
+        <div class="stage-box adult">
+          <canvas id="stage4" width="128" height="128"></canvas>
+        </div>
+        <div class="stage-info" data-i18n="stages.pixels" data-i18n-params='{"size":64}'>64×64 像素</div>
+      </div>
+    </div>
+    
+    <div class="legend">
+      <div class="legend-title" data-i18n="stages.legend.title">配色说明</div>
+      <div class="legend-items">
+        <div class="legend-item" data-i18n="stages.legend.dark_outline"><div class="color-box" style="background:#1a1a2e"></div>深紫描边</div>
+        <div class="legend-item" data-i18n="stages.legend.mid_body"><div class="color-box" style="background:#6a5a8a"></div>中紫主色</div>
+        <div class="legend-item" data-i18n="stages.legend.light_highlight"><div class="color-box" style="background:#a89aca"></div>浅紫高光</div>
+        <div class="legend-item" data-i18n="stages.legend.pink_heart"><div class="color-box" style="background:#f8c8d8"></div>浅粉心形</div>
+        <div class="legend-item" data-i18n="stages.legend.yellow_decor"><div class="color-box" style="background:#f8f8a8"></div>浅黄装饰</div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    let i18nData = {}
+
+    function t(key, params) {
+      const keys = key.split('.')
+      let v = i18nData
+      for (const k of keys) {
+        if (v && v[k]) v = v[k]
+        else return key
+      }
+      if (typeof v === 'string' && params) {
+        return v.replace(/\{(\w+)\}/g, (_, k) => String(params[k] || `{${k}}`))
+      }
+      return v || key
+    }
+
+    function updateTexts() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n')
+        const paramsRaw = el.getAttribute('data-i18n-params')
+        const params = paramsRaw ? JSON.parse(paramsRaw) : null
+        
+        // 处理包含子元素的图例项
+        if (el.classList.contains('legend-item')) {
+           const colorBox = el.querySelector('.color-box')
+           el.textContent = t(key, params)
+           if (colorBox) el.prepend(colorBox)
+        } else {
+           el.textContent = t(key, params)
+        }
+      })
+      // 通过重绘更新画布标签
+      f = 0; m = 0; tick = 0; // 重置动画计数器
+    }
+
+    if (window.electronAPI) {
+      window.electronAPI.getI18nData().then(data => {
+        i18nData = data
+        updateTexts()
+      })
+      window.electronAPI.onLanguageChange((data) => {
+        i18nData = data
+        updateTexts()
+      })
+    }
+
+    const COLORS={transparent:'transparent',darkPurple:'#1a1a2e',midPurple:'#6a5a8a',lightPurple:'#a89aca',paleViolet:'#c8b8e8',pink:'#f8c8d8',yellow:'#f8f8a8',white:'#f8f8f8',crack:'#8a7aaa'}
+    const STAGE1_EGG=[[0,0,0,0,5,5,0,0,0,5,5,0,0,0,0,0],[0,0,0,5,5,5,5,5,5,5,5,5,0,0,0,0],[0,0,0,5,5,5,5,5,5,5,5,5,0,0,0,0],[0,0,0,0,5,5,5,5,5,5,5,0,0,0,0,0],[0,0,0,0,0,5,5,5,5,5,0,0,0,0,0,0],[0,0,0,0,0,0,5,5,5,0,0,0,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],[0,0,0,0,1,4,4,3,4,4,4,1,0,0,0,0],[0,0,0,1,4,3,3,4,4,4,4,4,1,0,0,0],[0,0,0,1,4,3,4,4,8,8,4,4,1,0,0,0],[0,0,1,4,4,4,4,4,4,8,4,4,4,1,0,0],[0,0,1,4,4,4,4,4,4,4,4,4,4,1,0,0],[0,0,1,4,4,4,4,4,4,4,4,4,4,1,0,0],[0,0,0,1,4,4,4,4,4,4,4,4,1,0,0,0],[0,0,0,0,1,4,4,4,4,4,4,1,0,0,0,0],[0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0]]
+    const STAGE2_HATCH=[[0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,7,7,7,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,6,3,3,6,0,0,6,3,3,6,0,0,0,0,0,0,0,0],[0,0,0,0,0,6,3,3,3,3,6,6,3,3,3,3,6,0,0,0,0,0,0,0],[0,0,0,0,0,6,3,3,3,3,3,3,3,3,3,3,6,0,0,0,0,0,0,0],[0,0,0,0,0,0,6,3,3,3,3,3,3,3,3,6,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,6,3,3,3,3,3,3,6,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,6,3,3,3,3,6,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,6,3,3,6,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,1,3,3,2,2,2,2,3,3,2,1,0,0,0,0,0,0,0],[0,0,0,0,0,0,1,3,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0],[0,0,0,0,0,1,6,6,2,2,2,2,2,2,6,6,2,1,0,0,0,0,0,0],[0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0],[0,0,0,0,1,3,3,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0],[0,0,0,1,2,3,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],[0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],[0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0],[0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0],[0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0],[0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0],[0,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0]]
+    const STAGE3_ADULT=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,0,0,0,0,0],[0,0,0,7,3,3,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,3,3,7,0,0,0,0],[0,0,0,7,3,7,0,0,0,0,0,1,1,1,0,0,0,1,1,1,0,0,0,0,0,7,3,7,0,0,0,0],[0,0,0,0,7,0,0,0,0,0,1,6,1,1,1,0,1,1,1,6,1,0,0,0,0,0,7,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,1,6,1,1,1,1,1,1,1,1,1,6,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,1,2,2,7,2,2,2,2,2,2,2,2,7,2,2,2,1,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,1,2,7,2,2,2,2,2,2,2,2,2,2,2,2,7,2,2,1,0,0,0,0,0,0,0],[0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0],[0,0,0,0,0,1,2,2,2,1,1,2,2,2,2,2,2,2,2,2,1,1,2,2,2,1,0,0,0,0,0,0],[0,0,0,0,1,2,2,2,1,7,1,2,2,2,2,2,2,2,1,7,1,2,2,2,1,0,0,0,0,0,0,0],[0,0,0,1,2,2,3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,2,2,1,0,0,0,0,0,0],[0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0],[0,0,0,1,2,2,2,2,2,2,2,2,2,1,1,1,1,1,1,2,2,2,2,2,2,2,1,0,0,0,0,0],[0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0],[0,0,0,0,0,1,2,2,2,2,3,2,2,2,2,2,2,2,2,2,3,2,2,2,2,1,0,0,0,0,0,0],[0,0,0,0,0,0,1,2,3,2,2,2,2,2,2,2,2,2,2,2,2,2,3,2,1,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,1,2,2,2,2,3,2,2,2,2,2,2,3,2,2,2,2,1,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,1,2,2,2,2,2,2,2,2,1,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,1,2,2,1,0,0,1,2,2,1,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,1,2,2,1,0,0,1,2,2,1,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0]]
+    const RARE_COLORS={transparent:'transparent',darkPurple:'#3a2a5a',midPurple:'#6a5a8a',lightPurple:'#a89aca',gold:'#c8aa6a',brightGold:'#e8ca8a',darkGold:'#8a6a3a',silver:'#e8e8f8',white:'#f8f8ff'}
+    function drawMatrix(ctx,m,scale,map){for(let y=0;y<m.length;y++){for(let x=0;x<m[y].length;x++){const v=m[y][x];if(!v)continue;ctx.fillStyle=map[v]||'#000';ctx.fillRect(x*scale,y*scale,scale,scale)}}}
+    function clear(ctx,w,h){ctx.clearRect(0,0,w,h)}
+    function label(ctx,text,w){ctx.fillStyle='#1a1a2e';ctx.fillRect(4,4,w-8,16);ctx.strokeStyle='#4a4a6a';ctx.lineWidth=2;ctx.strokeRect(4,4,w-8,16);ctx.fillStyle='#c8d8c8';ctx.font='12px monospace';ctx.textAlign='center';ctx.fillText(text,w/2,16)}
+    const moodKeys=['happy','bored','hungry','angry','tired']
+    function animEgg(ctx,w,h,frame,moodIdx){clear(ctx,w,h);label(ctx,t('stages.moods.'+moodKeys[moodIdx]),w);const s=4;ctx.save();const dx=[-2,2,0,0][frame%4],dy=[0,0,1,-1][frame%4];ctx.translate(16+dx,24+dy);const heart=moodIdx===2? '#d8a8b8' : COLORS.pink;drawMatrix(ctx,STAGE1_EGG,s,{0:'transparent',1:COLORS.darkPurple,2:COLORS.midPurple,3:COLORS.lightPurple,4:COLORS.paleViolet,5:heart,6:COLORS.yellow,7:COLORS.white,8:COLORS.crack});ctx.restore()}
+    function animTeen(ctx,w,h,frame,moodIdx){clear(ctx,w,h);label(ctx,t('stages.moods.'+moodKeys[moodIdx]),w);const s=4;ctx.save();const dx=[-2,2,0][frame%3];const dy=moodIdx===4?(frame%2?3:0):0;ctx.translate(8+dx,16+dy);drawMatrix(ctx,STAGE2_HATCH,s,{0:'transparent',1:COLORS.darkPurple,2:COLORS.midPurple,3:COLORS.lightPurple,4:COLORS.paleViolet,5:COLORS.pink,6:COLORS.yellow,7:COLORS.white});ctx.restore()}
+    function animAdult(ctx,w,h,frame,moodIdx){clear(ctx,w,h);label(ctx,t('stages.moods.'+moodKeys[moodIdx]),w);const s=4;ctx.save();const sway=[-5,5,-5,5][frame%4];ctx.translate(8+sway,16);drawMatrix(ctx,STAGE3_ADULT,s,{0:'transparent',1:COLORS.darkPurple,2:COLORS.midPurple,3:COLORS.lightPurple,6:COLORS.yellow,7:COLORS.white});ctx.restore()}
+    function animRare(ctx,w,h,frame,moodIdx){clear(ctx,w,h);label(ctx,t('stages.tabs.rare')+' '+t('stages.moods.'+moodKeys[moodIdx]),w);const s=4;ctx.save();const glow=frame%2?RARE_COLORS.brightGold:RARE_COLORS.gold;const map={0:'transparent',1:RARE_COLORS.darkPurple,2:RARE_COLORS.midPurple,3:RARE_COLORS.lightPurple,4:glow,5:RARE_COLORS.brightGold,6:RARE_COLORS.darkGold,7:RARE_COLORS.silver,9:RARE_COLORS.white};ctx.translate(8,16);drawMatrix(ctx,STAGE3_ADULT,s,map);ctx.restore()}
+    const c1=document.getElementById('stage1').getContext('2d')
+    const c2=document.getElementById('stage2').getContext('2d')
+    const c3=document.getElementById('stage3').getContext('2d')
+    const c4=document.getElementById('stage4').getContext('2d')
+    let f=0,m=0,tick=0
+    function loop(){animEgg(c1,64,64,f,m);animTeen(c2,96,96,f,m);animAdult(c3,128,128,f,m);animRare(c4,128,128,f,m);f++;tick++;if(tick%40===0){m=(m+1)%5}requestAnimationFrame(loop)}
+    loop()
+    
+    function switchTab(id) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+      
+      const tabMap = {'stage1':0, 'stage2':1, 'stage3':2, 'stage4':3}
+      document.querySelectorAll('.tab')[tabMap[id]].classList.add('active')
+      document.getElementById('tab-' + id).classList.add('active')
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+[
+  {
+    "id": "flyer_distributor",
+    "name": "发传单",
+    "income": 10,
+    "requirement": {
+      "stages": ["baby", "adult"]
+    },
+    "duration": 5
+  },
+  {
+    "id": "miner",
+    "name": "矿工",
+    "income": 50,
+    "requirement": {
+      "strength": 50,
+      "endurance": 30,
+      "stages": ["adult"]
+    },
+    "duration": 10
+  },
+  {
+    "id": "programmer",
+    "name": "程序员",
+    "income": 80,
+    "requirement": {
+      "intelligence": 60,
+      "stages": ["adult"]
+    },
+    "duration": 20
+  },
+  {
+    "id": "thief",
+    "name": "侠盗",
+    "income": 100,
+    "requirement": {
+      "dexterity": 60,
+      "luck": 20,
+      "stages": ["adult"]
+    },
+    "duration": 15
+  }
+]

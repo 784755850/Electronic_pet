@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status</title>
+  <style>
+    :root {
+      --bg-color: #1a1b26;
+      --window-bg: #24283b;
+      --text-color: #c0caf5;
+      --accent-color: #7aa2f7;
+      --border-color: #414868;
+      --bar-bg: #15161e;
+      --success: #9ece6a;
+      --warning: #e0af68;
+      --danger: #f7768e;
+      --tab-inactive: #565f89;
+      --card-bg: rgba(255, 255, 255, 0.03);
+    }
+
+    * { box-sizing: border-box; user-select: none; }
+    
+    body {
+      width: 300px; height: 400px; margin: 0; 
+      background: transparent; 
+      font-family: "Segoe UI", "SF Pro Display", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; 
+      font-size: 14px;
+      overflow: hidden;
+      color: var(--text-color);
+    }
+
+    .window {
+      position: absolute; inset: 0; 
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .title {
+      height: 44px; 
+      background: rgba(20, 21, 30, 0.5);
+      backdrop-filter: blur(4px);
+      color: var(--text-color);
+      border-bottom: 1px solid var(--border-color);
+      text-align: center; 
+      line-height: 44px; 
+      font-size: 16px; 
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      -webkit-app-region: drag; 
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .close {
+      position: absolute; right: 12px; top: 12px; 
+      width: 20px; height: 20px; 
+      border: none; 
+      background: rgba(255, 255, 255, 0.1); 
+      border-radius: 50%;
+      color: var(--text-color);
+      font-size: 14px; line-height: 20px;
+      cursor: pointer; 
+      -webkit-app-region: no-drag; 
+      z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .close:hover { background: var(--danger); color: white; }
+
+    .tabs {
+      display: flex; 
+      background: rgba(20, 21, 30, 0.3);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 16px;
+      gap: 20px;
+      flex-shrink: 0;
+      justify-content: center;
+    }
+
+    .tab {
+      height: 40px; 
+      background: transparent; 
+      border: none;
+      color: var(--tab-inactive); 
+      font-size: 14px; 
+      font-weight: 500;
+      text-align: center; line-height: 40px; 
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s;
+      padding: 0 4px;
+    }
+    .tab:hover { color: var(--text-color); }
+    
+    .tab.active {
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+    .tab.active::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
+      background: var(--accent-color);
+      border-radius: 3px 3px 0 0;
+      box-shadow: 0 -2px 8px rgba(122, 162, 247, 0.4);
+    }
+
+    .content-area {
+      flex: 1; 
+      background: var(--bg-color);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { display: none; }
+
+    .tab-content { display: none; height: 100%; flex-direction: column; }
+    .tab-content.active { display: flex; animation: fadeIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    
+    .label { 
+      width: 65px; 
+      font-size: 13px; 
+      color: #787c99;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .bar-wrap { 
+      flex: 1; height: 10px; 
+      background: var(--bar-bg); 
+      border-radius: 5px; 
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .bar-fill { 
+      height: 100%; 
+      background: var(--accent-color); 
+      border-radius: 5px; 
+      width: 0%; 
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 0 8px rgba(122, 162, 247, 0.4);
+    }
+    .bar-fill.red { background: var(--danger); box-shadow: 0 0 8px rgba(247, 118, 142, 0.4); }
+    .bar-fill.yellow { background: var(--warning); box-shadow: 0 0 8px rgba(224, 175, 104, 0.4); }
+    
+    .kv { font-size: 14px; color: var(--text-color); font-family: "JetBrains Mono", "Consolas", monospace; font-weight: 600; }
+    .kv-num { min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+    
+    .actions { display: flex; gap: 10px; margin-top: 16px; justify-content: center; }
+    
+    .row-actions { display: flex; gap: 6px; margin-left: auto; }
+    .btn-sm { 
+      padding: 4px 10px; height: 24px; 
+      border: 1px solid var(--border-color);
+      background: rgba(255,255,255,0.05);
+      color: var(--text-color);
+      border-radius: 4px;
+      font-size: 12px; 
+      line-height: 14px; 
+      text-align: center;
+      cursor: pointer; 
+      -webkit-app-region: no-drag; 
+      transition: all 0.2s;
+    }
+    .btn-sm:hover { background: var(--danger); border-color: var(--danger); color: white; }
+
+    canvas { image-rendering: pixelated; }
+    
+    /* Info Tab Specifics */
+    #tab-info { padding: 0 4px; }
+    #tab-info .info-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #tab-info .info-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    #tab-info .label { width: auto; font-size: 14px; color: #a9b1d6; text-transform: none; }
+    #tab-info .kv { font-size: 15px; color: #c0caf5; }
+    
+    #kv-coins { color: var(--warning); text-shadow: 0 0 10px rgba(224, 175, 104, 0.3); }
+    
+    .icon-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+      margin-top: 10px;
+      position: relative;
+    }
+    .icon-bg {
+      width: 64px; height: 64px;
+      background: radial-gradient(circle, rgba(122,162,247,0.2) 0%, transparent 70%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(122, 162, 247, 0.1);
+      box-shadow: 0 0 16px rgba(122, 162, 247, 0.1);
+    }
+    #icon { width: 48px; height: 48px; }
+  </style>
+</head>
+<body>
+  <div class="window">
+    <div class="title" id="title" data-i18n="status.title">Status</div>
+    <div class="close" id="close-btn">×</div>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('basic')" data-i18n="status.tabs.basic">Basic</div>
+      <div class="tab" onclick="switchTab('stats')" data-i18n="status.tabs.abilities">Stats</div>
+      <div class="tab" onclick="switchTab('info')" data-i18n="status.tabs.info">Info</div>
+    </div>
+
+    <div class="content-area">
+      <!-- 基础标签页 -->
+      <div id="tab-basic" class="tab-content active">
+        <div style="height:4px"></div>
+        <div class="row">
+          <div class="label" data-i18n="status.labels.mood">Mood</div>
+          <div class="bar-wrap"><div class="bar-fill" id="bar-mood"></div></div>
+          <div class="kv kv-num" id="kv-mood">0%</div>
+        </div>
+        <div class="row">
+          <div class="label" data-i18n="status.labels.hunger">Hunger</div>
+          <div class="bar-wrap"><div class="bar-fill red" id="bar-hunger"></div></div>
+          <div class="kv kv-num" id="kv-hunger">0%</div>
+        </div>
+        <div class="row">
+          <div class="label" data-i18n="status.labels.clean">Clean</div>
+          <div class="bar-wrap"><div class="bar-fill yellow" id="bar-clean"></div></div>
+          <div class="kv kv-num" id="kv-clean">0%</div>
+        </div>
+        <div class="row">
+          <div class="label" data-i18n="status.labels.health">Health</div>
+          <div class="bar-wrap"><div class="bar-fill" id="bar-health"></div></div>
+          <div class="kv kv-num" id="kv-health">0%</div>
+        </div>
+      </div>
+
+      <!-- 属性标签页 -->
+      <div id="tab-stats" class="tab-content">
+        <div style="height:4px"></div>
+        <div class="row">
+          <div class="label" data-i18n="status.labels.strength">STR</div>
+          <div class="bar-wrap"><div class="bar-fill" id="bar-strength"></div></div>
+          <div class="kv kv-num" id="kv-strength">0</div>
+        </div>
+        <div class="row">
+          <div class="label" data-i18n="status.labels.dexterity">DEX</div>
+          <div class="bar-wrap"><div class="bar-fill" id="bar-dexterity"></div></div>
+          <div class="kv kv-num" id="kv-dexterity">0</div>
+        </div>
+        <div class="row">
+          <div class="label" data-i18n="status.labels.endurance">END</div>
+          <div class="bar-wrap"><div class="bar-fill" id="bar-endurance"></div></div>
+          <div class="kv kv-num" id="kv-endurance">0</div>
+        </div>
+        <div class="row">
+          <div class="label" data-i18n="status.labels.intelligence">INT</div>
+          <div class="bar-wrap"><div class="bar-fill" id="bar-intelligence"></div></div>
+          <div class="kv kv-num" id="kv-intelligence">0</div>
+        </div>
+        <div class="row">
+          <div class="label" data-i18n="status.labels.luck">LUK</div>
+          <div class="bar-wrap"><div class="bar-fill" id="bar-luck"></div></div>
+          <div class="kv kv-num" id="kv-luck">0</div>
+        </div>
+        <div class="row">
+          <div class="label" data-i18n="status.labels.charm">CHM</div>
+          <div class="bar-wrap"><div class="bar-fill" id="bar-charm"></div></div>
+          <div class="kv kv-num" id="kv-charm">0</div>
+        </div>
+      </div>
+
+      <!-- 信息标签页 -->
+      <div id="tab-info" class="tab-content">
+        <div class="icon-container">
+           <div class="icon-bg">
+             <canvas id="icon" width="32" height="32"></canvas>
+           </div>
+        </div>
+        <div class="info-card">
+          <div class="label" data-i18n="status.labels.stage">Stage</div>
+          <div class="kv" id="kv-stage">-</div>
+        </div>
+        <div class="info-card">
+          <div class="label" data-i18n="status.labels.action">Action</div>
+          <div class="kv" id="kv-action">-</div>
+        </div>
+        <div class="info-card">
+          <div class="label" data-i18n="status.labels.money">Gold</div>
+          <div class="kv" id="kv-coins">0</div>
+        </div>
+        <div class="info-card" id="card-time" style="display:none">
+          <div class="label" data-i18n="status.labels.timeLeft">Time</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="kv" id="kv-left">-</div>
+            <div class="btn-sm" id="btn-endwork" style="display:none" data-i18n="actions.end_work">End</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const $ = (id) => document.getElementById(id)
+    
+    let i18nData = {}
+
+    function t(key, params) {
+      const keys = key.split('.')
+      let v = i18nData
+      for (const k of keys) {
+        if (v && v[k]) v = v[k]
+        else return key
+      }
+      if (typeof v === 'string' && params) {
+        return v.replace(/\{(\w+)\}/g, (_, k) => String(params[k] || `{${k}}`))
+      }
+      return v
+    }
+
+    function updateTexts() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n')
+        el.textContent = t(key)
+      })
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+      
+      const tabs = ['basic', 'stats', 'info']
+      const idx = tabs.indexOf(name)
+      document.querySelectorAll('.tab')[idx].classList.add('active')
+      document.getElementById('tab-' + name).classList.add('active')
+    }
+
+    function setBar(id, val) {
+      const v = Math.max(0, Math.min(100, Math.round(val || 0)))
+      $(id).style.width = v + '%'
+      const kvId = 'kv-' + id.split('-')[1]
+      $(kvId).textContent = v + (id.includes('mood') || id.includes('hunger') || id.includes('clean') || id.includes('health') ? '%' : ' / 100')
+    }
+    
+    function formatLeft(ms) {
+      const totalSec = Math.max(0, Math.floor(ms / 1000))
+      const h = Math.floor(totalSec / 3600)
+      const m = Math.floor((totalSec % 3600) / 60)
+      const s = totalSec % 60
+      if (h > 0) return `${h}h${m}m`
+      if (m > 0) return `${m}m${s}s`
+      return `${s}s`
+    }
+
+    let lastPet = null
+    let lastPlayer = null
+
+    function update(pet, player) {
+      lastPet = pet
+      lastPlayer = player
+      $('title').textContent = `${pet.name} Lv.${pet.level}`
+      setBar('bar-mood', pet.mood)
+      setBar('bar-hunger', 100 - pet.hunger) 
+      setBar('bar-clean', pet.clean)
+      setBar('bar-health', pet.health)
+      
+      setBar('bar-strength', pet.strength)
+      setBar('bar-dexterity', pet.dexterity)
+      setBar('bar-endurance', pet.endurance)
+      setBar('bar-intelligence', pet.intelligence)
+      setBar('bar-luck', pet.luck)
+      setBar('bar-charm', pet.charm)
+      
+      $('kv-stage').textContent = t(`stages.${pet.stage}`)
+      $('kv-action').textContent = t(`actionStatus.${pet.currentAction || 'idle'}`)
+      $('kv-coins').textContent = player.coins
+      const now = Date.now()
+      let leftText = ''
+      const endBtn = $('btn-endwork')
+      const timeCard = $('card-time')
+      
+      if (pet.workingUntil && pet.workingUntil > now) {
+        leftText = `${formatLeft(pet.workingUntil - now)}`
+        endBtn.style.display = 'inline-block'
+        if(timeCard) timeCard.style.display = 'flex'
+      } else if (pet.studyingUntil && pet.studyingUntil > now) {
+        leftText = `${formatLeft(pet.studyingUntil - now)}`
+        endBtn.style.display = 'none'
+        if(timeCard) timeCard.style.display = 'flex'
+      } else {
+        endBtn.style.display = 'none'
+        if(timeCard) timeCard.style.display = 'none'
+      }
+      $('kv-left').textContent = leftText
+      
+      drawIcon(pet)
+    }
+
+    function drawIcon(pet) {
+      const c = $('icon'); const ctx = c.getContext('2d')
+      ctx.clearRect(0,0,32,32)
+      // Icons pixel art
+      const icons = {
+        idle: [[0,0,0,0,0,0,0,0, 0,1,1,1,1,1,1,0, 1,1,1,1,1,1,1,1, 1,1,2,1,1,2,1,1, 1,1,1,1,1,1,1,1, 1,1,2,1,1,2,1,1, 0,1,1,2,2,1,1,0, 0,0,1,1,1,1,0,0]],
+        work: [[1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,1,2,2,2,2,1,0,0,1,2,2,2,2,1,0,0,1,2,2,2,2,1,0,0,1,2,2,2,2,1,0,0,1,1,1,1,1,1,0]],
+        study: [[0,1,1,1,1,1,1,0,1,2,2,2,2,2,2,1,1,2,1,1,1,1,2,1,1,2,1,1,1,1,2,1,1,2,1,1,1,1,2,1,1,2,2,2,2,2,2,1,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0]],
+        sleep: [[0,0,1,1,1,1,0,0,0,1,2,2,2,2,1,0,1,2,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,2,2,1,0,1,2,2,2,2,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0]],
+        sick: [[0,0,1,1,1,1,0,0,0,1,2,2,2,2,1,0,1,2,1,2,2,1,2,1,1,2,2,2,2,2,2,1,1,2,2,1,1,2,2,1,0,1,2,2,2,2,1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0]]
+      }
+      let icon = icons.idle
+      if (pet.sick) icon = icons.sick
+      else if (pet.currentAction === 'work') icon = icons.work
+      else if (pet.currentAction === 'study') icon = icons.study
+      else if (pet.currentAction === 'sleep') icon = icons.sleep
+      
+      if (!icon) return
+
+      // Draw pixel art
+      const palette = ['transparent','#c0caf5','#7aa2f7'] // Modernized palette
+      const w = 8
+      const h = 8
+      const scale = 4
+      
+      for(let y=0; y<h; y++) {
+        for(let x=0; x<w; x++) {
+          const colorIdx = icon[0][y*w+x]
+          if (colorIdx > 0) {
+            ctx.fillStyle = palette[colorIdx]
+            ctx.fillRect(x*scale, y*scale, scale, scale)
+          }
+        }
+      }
+    }
+
+    const api = window.electronAPI
+    if (api) {
+      if (api.getI18nData) {
+        api.getI18nData().then(data => {
+          i18nData = data
+          updateTexts()
+        })
+      }
+      if (api.onLanguageChange) {
+        api.onLanguageChange(data => {
+          i18nData = data
+          updateTexts()
+        })
+      }
+      if (api.onStatusUpdate) {
+        api.onStatusUpdate(({ pet, player }) => {
+          update(pet, player)
+        })
+      }
+    }
+    
+    $('close-btn').onclick = () => {
+      window.close()
+    }
+    
+    // Initial Request
+    if (api && api.refreshStatus) {
+      api.refreshStatus()
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+[
+  {
+    "id": "ancient_coin",
+    "name": "古老的金币",
+    "locales": { 
+      "en-US": { 
+        "name": "Ancient Coin",
+        "description": "It's inedible, but looks valuable."
+      } 
+    },
+    "type": "special",
+    "price": 500,
+    "effects": {
+      "mood": 5
+    },
+    "description": "虽然不能吃，但看起来很值钱。"
+  },
+  {
+    "id": "mystic_herb",
+    "name": "神秘草药",
+    "locales": { 
+      "en-US": { 
+        "name": "Mystic Herb",
+        "description": "Tastes weird, but good for health."
+      } 
+    },
+    "type": "special",
+    "price": 100,
+    "effects": {
+      "health": 80,
+      "clean": -20
+    },
+    "description": "味道很怪，但对身体很好。"
+  },
+  {
+    "id": "alien_chip",
+    "name": "外星芯片",
+    "locales": { 
+      "en-US": { 
+        "name": "Alien Chip",
+        "description": "Contains unknown technological power."
+      } 
+    },
+    "type": "special",
+    "price": 1000,
+    "effects": {
+      "intelligence": 5
+    },
+    "description": "蕴含着未知的科技力量。"
+  },
+  {
+    "id": "golden_feather",
+    "name": "金羽毛",
+    "locales": { 
+      "en-US": { 
+        "name": "Golden Feather",
+        "description": "A shiny feather that you can't put down."
+      } 
+    },
+    "type": "special",
+    "price": 800,
+    "effects": {
+      "charm": 5,
+      "mood": 50
+    },
+    "description": "闪闪发光的羽毛，让人爱不释手。"
+  }
+]

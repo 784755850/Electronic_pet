@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Mode</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    .container {
+      position: absolute;
+      inset: 2px;
+      background: #2b2b2b;
+      border: 2px solid #4a4a6a;
+      box-shadow: 
+        inset -2px -2px 0 #1a1a2e,
+        inset 2px 2px 0 #4a4a6a;
+      display: flex;
+      flex-direction: column;
+      color: #c8d8c8;
+    }
+
+    .header {
+      height: 32px;
+      background: #1a1a2e;
+      border-bottom: 2px solid #4a4a6a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      position: relative;
+      -webkit-app-region: drag;
+    }
+    
+    .close-btn {
+      position: absolute;
+      right: 6px;
+      top: 6px;
+      width: 20px;
+      height: 20px;
+      background: #2b2b2b;
+      border: 1px solid #4a4a6a;
+      text-align: center;
+      line-height: 18px;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+    }
+    .close-btn:hover { background: #4a4a6a; color: #fff; }
+
+    .content {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .section {
+      border: 1px solid #4a4a6a;
+      padding: 8px;
+      background: #1a1a2e;
+    }
+
+    .section-title {
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #ff8a00;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      background: #2b2b2b;
+      border: 2px solid #4a4a6a;
+      color: #c8d8c8;
+      padding: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.1s;
+    }
+    button:hover {
+      background: #3a3a4a;
+      color: #fff;
+      border-color: #6a6a8a;
+    }
+    button:active {
+      background: #1a1a2e;
+      border-color: #4a4a6a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span data-i18n="debug.title">TEST MODE</span>
+      <div class="close-btn" id="close-btn">×</div>
+    </div>
+    <div class="content">
+      
+      <div class="section">
+        <div class="section-title" data-i18n="debug.stats">Stats</div>
+        <div class="btn-grid">
+          <button onclick="debugAction('fill-stats')" data-i18n="debug.full_stats">Full Stats</button>
+          <button onclick="debugAction('low-stats')" data-i18n="debug.low_stats">Low Stats</button>
+          <button onclick="debugAction('add-money')" data-i18n="debug.add_coins">+1000 Coins</button>
+          <button onclick="debugAction('reset-money')" data-i18n="debug.reset_coins">Reset Coins</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" data-i18n="debug.evolution">Evolution</div>
+        <div class="btn-grid">
+          <button onclick="debugAction('set-stage', 'egg')" data-i18n="debug.egg">Egg</button>
+          <button onclick="debugAction('set-stage', 'baby')" data-i18n="debug.baby">Baby</button>
+          <button onclick="debugAction('set-stage', 'adult')" data-i18n="debug.adult">Adult</button>
+          <button onclick="debugAction('set-stage', 'rare')" data-i18n="debug.rare">Rare</button>
+        </div>
+      </div>
+      
+       <div class="section">
+        <div class="section-title" data-i18n="debug.others">Others</div>
+        <div class="btn-grid">
+          <button onclick="debugAction('unlock-all')" data-i18n="debug.unlock_all">Unlock All</button>
+           <!-- <button onclick="debugAction('reset-game')">Reset Game</button> -->
+        </div>
+      </div>
+      <div id="toast" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 5px 10px; border-radius: 4px; display: none; font-size: 12px; border: 1px solid #555;" data-i18n="debug.action_done">Action Done</div>
+
+    </div>
+  </div>
+  <script>
+    document.getElementById('close-btn').onclick = () => window.close();
+
+    let i18nData = {};
+
+    function t(key) {
+      const keys = key.split('.')
+      let v = i18nData
+      for (const k of keys) {
+        if (v && v[k]) v = v[k]
+        else return key
+      }
+      return v || key
+    }
+
+    function updateTexts() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n')
+        el.textContent = t(key)
+      })
+      // Update title
+      document.title = t('debug.title');
+    }
+
+    // Init i18n
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        if (window.electronAPI && window.electronAPI.getI18nData) {
+          i18nData = await window.electronAPI.getI18nData()
+          updateTexts()
+        }
+      } catch (e) {
+        console.error('Failed to init i18n', e)
+      }
+
+      if (window.electronAPI && window.electronAPI.onLanguageChange) {
+        window.electronAPI.onLanguageChange((data) => {
+          i18nData = data
+          updateTexts()
+        })
+      }
+    })
+
+    function debugAction(action, param) {
+      if (window.electronAPI && window.electronAPI.debugAction) {
+        window.electronAPI.debugAction(action, param);
+        showToast();
+      }
+    }
+
+    function showToast() {
+      const toast = document.getElementById('toast');
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 1500);
+    }
+  </script>
+</body>
+</html>

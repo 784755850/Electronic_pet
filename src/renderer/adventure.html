@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>探险</title>
+  <style>
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      color: #c8d8c8;
+      overflow: hidden;
+      user-select: none;
+      font-size: 14px;
+    }
+
+    .container {
+      width: calc(100% - 16px);
+      height: calc(100% - 16px);
+      margin: 8px;
+      background: #2b2b2b;
+      border: 4px solid #4a4a6a;
+      box-shadow: 
+        inset -4px -4px 0 #1a1a2e,
+        inset 4px 4px 0 #4a4a6a;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .header {
+      height: 32px;
+      background: #1a1a2e;
+      border-bottom: 2px solid #4a4a6a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      letter-spacing: 2px;
+      -webkit-app-region: drag;
+      flex-shrink: 0;
+    }
+
+    .close-btn {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      width: 20px;
+      height: 20px;
+      background: #2b2b2b;
+      border: 1px solid #4a4a6a;
+      color: #c8d8c8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
+      z-index: 10;
+    }
+
+    .close-btn:hover {
+      background: #4a4a6a;
+      color: #fff;
+    }
+
+    .content {
+      flex: 1;
+      padding: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .location-list {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .location-item {
+      background: #1a1a2e;
+      border: 1px solid #4a4a6a;
+      padding: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .location-item:hover {
+      background: #4a4a6a;
+      transform: translateX(2px);
+    }
+
+    .location-name {
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 2px;
+      font-size: 15px;
+    }
+
+    .location-desc {
+      font-size: 11px;
+      color: #8a8aaa;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .location-info {
+      font-size: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .risk-low { color: #8aaa8a; }
+    .risk-medium { color: #aaaa8a; }
+    .risk-high { color: #ca8a8a; }
+
+    .pagination {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border-top: 2px solid #4a4a6a;
+      background: #1a1a2e;
+      margin: 0 -10px -10px -10px; /* 延伸到边缘 */
+      padding: 0 10px;
+    }
+
+    .page-btn {
+      width: 24px;
+      height: 20px;
+      background: #4a4a6a;
+      border: 1px solid #8a8aaa;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-btn:disabled {
+      background: #2a2a3a;
+      color: #5a5a6a;
+      border-color: #3a3a4a;
+      cursor: default;
+    }
+
+    .page-info {
+      font-size: 11px;
+      color: #8a8aaa;
+    }
+
+    .result-view {
+      display: none;
+      height: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .result-icon {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    .result-msg {
+      font-size: 14px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .rewards {
+      font-size: 12px;
+      color: #ffd700;
+      margin-bottom: 20px;
+    }
+
+    .back-btn {
+      padding: 8px 20px;
+      background: #4a4a6a;
+      border: 1px solid #8a8aaa;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .back-btn:hover {
+      background: #5a5a7a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span data-i18n="adventure.title">探险</span>
+      <div class="close-btn" id="close-btn">×</div>
+    </div>
+    
+    <div class="content" id="list-view">
+      <div class="location-list" id="location-list">
+        <!-- 地点将被注入到这里 -->
+        <div style="text-align:center; padding:20px;" data-i18n="adventure.loading">加载中...</div>
+      </div>
+      
+      <div class="pagination" id="pagination">
+        <button class="page-btn" id="prev-btn">&lt;</button>
+        <span class="page-info" id="page-info">1 / 1</span>
+        <button class="page-btn" id="next-btn">&gt;</button>
+      </div>
+    </div>
+
+    <div class="result-view" id="result-view">
+      <div class="result-icon" id="result-icon">🎲</div>
+      <div class="result-msg" id="result-msg">...</div>
+      <div class="rewards" id="result-rewards"></div>
+      <button class="back-btn" id="back-btn" data-i18n="adventure.back">返回</button>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const listView = $('list-view');
+    const resultView = $('result-view');
+    const locationListEl = $('location-list');
+    
+    let allLocations = [];
+    let allItemsMap = {};
+    let currentPage = 1;
+    const itemsPerPage = 3; // 刚好适合而不滚动
+    let i18nData = {}
+
+    // 初始化国际化
+    ;(async () => {
+      try {
+        if (window.electronAPI.getI18nData) {
+          i18nData = await window.electronAPI.getI18nData()
+          updateTexts()
+          if (allLocations.length > 0) renderLocations()
+        }
+        if (window.electronAPI.getItems) {
+          const items = await window.electronAPI.getItems()
+          items.forEach(i => allItemsMap[i.id] = i)
+        }
+      } catch (e) {
+        console.error('Failed to init data', e)
+      }
+    })()
+
+    if (window.electronAPI.onLanguageChange) {
+      window.electronAPI.onLanguageChange((data) => {
+        i18nData = data
+        updateTexts()
+        renderLocations()
+      })
+    }
+
+    function t(key, params) {
+      const keys = key.split('.')
+      let v = i18nData
+      for (const k of keys) {
+        if (v && v[k]) v = v[k]
+        else return key
+      }
+      if (typeof v === 'string' && params) {
+        return v.replace(/\{(\w+)\}/g, (_, k) => String(params[k] || `{${k}}`))
+      }
+      return v || key
+    }
+
+    function updateTexts() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n')
+        el.textContent = t(key)
+      })
+    }
+
+    $('close-btn').onclick = () => window.close();
+    $('back-btn').onclick = () => {
+      resultView.style.display = 'none';
+      listView.style.display = 'flex';
+      renderLocations();
+    };
+
+    $('prev-btn').onclick = () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderLocations();
+      }
+    };
+
+    $('next-btn').onclick = () => {
+      const maxPage = Math.ceil(allLocations.length / itemsPerPage);
+      if (currentPage < maxPage) {
+        currentPage++;
+        renderLocations();
+      }
+    };
+
+    function renderLocations() {
+      locationListEl.innerHTML = '';
+      
+      if (allLocations.length === 0) {
+        locationListEl.innerHTML = `<div style="padding:20px;text-align:center">${t('adventure.empty')}</div>`;
+        $('pagination').style.display = 'none';
+        return;
+      }
+
+      $('pagination').style.display = 'flex';
+      const maxPage = Math.ceil(allLocations.length / itemsPerPage);
+      if (currentPage > maxPage) currentPage = maxPage;
+      if (currentPage < 1) currentPage = 1;
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const pageItems = allLocations.slice(start, end);
+
+      pageItems.forEach(loc => {
+        const el = document.createElement('div');
+        el.className = 'location-item';
+        
+        let riskClass = 'risk-low';
+        if (loc.riskLevel === 'medium') riskClass = 'risk-medium';
+        if (loc.riskLevel === 'high') riskClass = 'risk-high';
+
+        const riskText = t('adventure.risk.' + loc.riskLevel);
+        
+        const nameKey = `adventure.locations.${loc.id}.name`;
+        const descKey = `adventure.locations.${loc.id}.desc`;
+        const localizedName = t(nameKey) !== nameKey ? t(nameKey) : loc.name;
+        const localizedDesc = t(descKey) !== descKey ? t(descKey) : loc.description;
+
+        el.innerHTML = `
+          <div class="location-name">${localizedName}</div>
+          <div class="location-desc">${localizedDesc}</div>
+          <div class="location-info">
+            <span>${t('adventure.labels.cost', {amount: loc.cost})}</span>
+            <span class="${riskClass}">${t('adventure.labels.risk', {level: riskText})}</span>
+          </div>
+        `;
+        
+        el.onclick = () => startAdventure(loc.id);
+        locationListEl.appendChild(el);
+      });
+
+      $('page-info').textContent = `${currentPage} / ${maxPage}`;
+      $('prev-btn').disabled = currentPage === 1;
+      $('next-btn').disabled = currentPage === maxPage;
+    }
+
+    async function loadLocations() {
+      try {
+        allLocations = await window.electronAPI.getAdventureLocations();
+        currentPage = 1;
+        // Wait for i18n data if not ready
+        if (Object.keys(i18nData).length > 0) renderLocations();
+        else setTimeout(renderLocations, 100);
+      } catch (e) {
+        locationListEl.innerHTML = `<div style="color:red;padding:20px">${t('adventure.error')}</div>`;
+        console.error(e);
+      }
+    }
+
+    async function startAdventure(locId) {
+      locationListEl.innerHTML = `<div style="text-align:center;padding:20px">${t('adventure.adventuring')}</div>`;
+      $('pagination').style.display = 'none';
+      
+      try {
+        // Simulate delay for effect
+        await new Promise(r => setTimeout(r, 1000));
+        
+        const result = await window.electronAPI.startAdventure(locId);
+        
+        showResult(result);
+      } catch (e) {
+        console.error(e);
+        locationListEl.innerHTML = t('adventure.error_generic');
+        setTimeout(loadLocations, 1000);
+      }
+    }
+
+    function showResult(result) {
+      listView.style.display = 'none';
+      resultView.style.display = 'flex';
+      
+      $('result-msg').textContent = t(result.message);
+      
+      let rewardsHtml = '';
+      if (result.success && result.rewards) {
+        const r = result.rewards;
+        const list = [];
+        if (r.coins) list.push(t('adventure.rewards.coins', {amount: r.coins}));
+        if (r.exp) list.push(t('adventure.rewards.exp', {amount: r.exp}));
+        if (r.items) {
+          r.items.forEach(i => {
+             const key = `items.${i.id}.name`
+             const val = t(key)
+             const name = val !== key ? val : (allItemsMap[i.id]?.name || i.id)
+             list.push(t('adventure.rewards.item', {name: name, count: i.count}))
+          });
+        }
+        if (r.stats) {
+          Object.entries(r.stats).forEach(([k, v]) => {
+             // Try to find localized label for stat
+             const statLabel = t('status.labels.' + k) === 'status.labels.' + k ? k : t('status.labels.' + k);
+             list.push(t('adventure.rewards.stat', {key: statLabel, value: v}));
+          });
+        }
+        rewardsHtml = list.join('<br>');
+      }
+      
+      $('result-rewards').innerHTML = rewardsHtml;
+      $('result-icon').textContent = result.success ? '🎉' : '😫';
+    }
+
+    // Initialize
+    loadLocations();
+  </script>
+</body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宠物设置</title>
+  <style>
+    @font-face {
+      font-family: 'PixelFont';
+      src: local('Segoe UI'), local('Microsoft YaHei'), local('sans-serif');
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      /* image-rendering: pixelated; Removed global pixelated rendering for text clarity */
+    }
+    
+    body {
+      width: 420px;
+      height: 560px;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: transparent;
+      overflow: hidden;
+      -webkit-app-region: drag;
+      color: #c8d8c8;
+      font-size: 14px;
+    }
+    
+    .container {
+      margin: 8px;
+      padding: 8px;
+      background: #2b2b2b;
+      border: 4px solid #4a4a6a;
+      box-shadow: 
+        inset -4px -4px 0 #1a1a2e,
+        inset 4px 4px 0 #4a4a6a;
+      -webkit-app-region: drag;
+      height: calc(100% - 16px);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    .title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: #c8d8c8;
+      padding: 4px 0 8px;
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+      flex-shrink: 0;
+      /* title is naturally draggable because container is drag */
+    }
+    
+    .settings-input {
+      width: 100%;
+      background: #1a1a2e;
+      border: 2px solid #4a4a6a;
+      color: #c8d8c8;
+      padding: 4px 8px;
+      font-family: inherit;
+      outline: none;
+      -webkit-app-region: no-drag;
+    }
+    
+    .settings-input:focus {
+      border-color: #8a8aaa;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      margin-bottom: 0;
+      gap: 4px;
+      flex-shrink: 0;
+      -webkit-app-region: no-drag;
+    }
+    .tab {
+      flex: 1;
+      height: 32px;
+      background: #1a1a2e;
+      border: 2px solid #4a4a6a;
+      border-bottom: none;
+      color: #6a6a8a;
+      font-size: 14px;
+      text-align: center;
+      line-height: 28px;
+      cursor: pointer;
+    }
+    .tab.active {
+      background: #3a3a4a;
+      color: #c8d8c8;
+      height: 34px;
+      margin-top: -2px;
+      border-bottom: 2px solid #3a3a4a;
+      z-index: 1;
+      font-weight: bold;
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background-image:
+        linear-gradient(45deg, #3a3a4a 25%, transparent 25%),
+        linear-gradient(-45deg, #3a3a4a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #3a3a4a 75%),
+        linear-gradient(-45deg, transparent 75%, #3a3a4a 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+      border: 2px solid #1a1a2e;
+      position: relative;
+      margin-top: -2px;
+      padding: 12px;
+      overflow: hidden;
+      -webkit-app-region: no-drag;
+    }
+
+    .tab-content { display: none; flex: 1; overflow-y: auto; flex-direction: column; }
+    .tab-content.active { display: flex; }
+
+    /* Preview Section */
+    .preview-section {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+    
+    .preview-box {
+      width: 80px;
+      height: 80px;
+      background: #1a1a2e;
+      border: 4px solid #4a4a6a;
+      box-shadow: 
+        inset -2px -2px 0 #0a0a1e,
+        inset 2px 2px 0 #3a3a5a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 16px;
+    }
+    
+    #preview-canvas {
+      width: 64px;
+      height: 64px;
+      image-rendering: pixelated;
+    }
+    
+    .preview-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    /* Color Section */
+    .color-section {
+      margin-bottom: 12px;
+      padding: 8px;
+      background: #1a1a2e;
+      border: 2px solid #4a4a6a;
+    }
+    
+    .color-label {
+      font-size: 14px;
+      color: #c8d8c8;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    
+    .color-palette {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    
+    .color-btn {
+      width: 28px;
+      height: 28px;
+      border: 2px solid #4a4a6a;
+      cursor: pointer;
+      box-shadow: none;
+      transition: none;
+    }
+    
+    .color-btn:hover {
+      border-color: #ffffff;
+      box-shadow: 0 0 0 1px #ffffff;
+    }
+    
+    .color-btn.selected {
+      border-color: #ffff00;
+      box-shadow: 0 0 0 1px #ffff00;
+    }
+    
+    /* Button Section */
+    .button-section {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: auto;
+      padding-top: 12px;
+      flex-shrink: 0;
+      -webkit-app-region: no-drag;
+    }
+    
+    .pixel-btn {
+      padding: 8px 24px;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      color: #ffffff;
+      background: #4a4a6a;
+      border: 2px solid #2a2a4a;
+      cursor: pointer;
+      box-shadow: 
+        inset 2px 2px 0 #6a6a8a,
+        inset -2px -2px 0 #3a3a5a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .pixel-btn:hover {
+      background: #5a5a7a;
+    }
+    
+    .pixel-btn:active {
+      box-shadow: 
+        inset 2px 2px 0 #3a3a5a,
+        inset -2px -2px 0 #6a6a8a;
+      transform: translate(1px, 1px);
+    }
+    
+    .pixel-btn.confirm {
+      background: #4a8a4a;
+      border-color: #2a6a2a;
+      box-shadow: 
+        inset 2px 2px 0 #5a9a5a,
+        inset -2px -2px 0 #3a7a3a;
+    }
+    
+    .pixel-btn.confirm:hover {
+      background: #5a9a5a;
+    }
+    
+    .pixel-btn.reset {
+      background: #8a4a4a;
+      border-color: #6a2a2a;
+      box-shadow: 
+        inset 2px 2px 0 #9a5a5a,
+        inset -2px -2px 0 #7a3a3a;
+    }
+    
+    .pixel-btn.reset:hover {
+      background: #9a5a5a;
+    }
+    
+    .close-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: #2b2b2b;
+      border: 1px solid #4a4a6a;
+      color: #c8d8c8;
+      font-size: 16px;
+      line-height: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: none;
+      -webkit-app-region: no-drag;
+      z-index: 100;
+    }
+    
+    .close-btn:hover {
+      background: #4a4a6a;
+      color: #fff;
+      border-color: #8a8aaa;
+    }
+    
+    input[type="checkbox"], input[type="radio"] {
+      accent-color: #4a4a6a;
+    }
+    
+    input[type="number"] {
+      background: #2b2b2b !important;
+      color: #c8d8c8 !important;
+      border: 1px solid #4a4a6a !important;
+    }
+    
+    .settings-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="close-btn" id="close-btn">×</button>
+    <div class="title" data-i18n="settings.title">◆ 宠物设置 ◆</div>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('appearance')" data-i18n="settings.tabs.appearance">外观</div>
+      <div class="tab" onclick="switchTab('general')" data-i18n="settings.tabs.general">常规</div>
+    </div>
+    
+    <div class="content-area">
+      <!-- Appearance Tab -->
+      <div id="tab-appearance" class="tab-content active">
+        <div class="preview-section">
+          <div class="preview-box">
+            <canvas id="preview-canvas" width="64" height="64"></canvas>
+          </div>
+          <div class="preview-controls">
+             <button class="pixel-btn" id="random-appearance-btn" style="font-size:12px;" data-i18n="settings.appearance.random">随机外观</button>
+             <button class="pixel-btn" id="apply-appearance-btn" style="font-size:12px;background:#4a8a4a;border-color:#2a6a2a;" data-i18n="settings.appearance.apply">立即生效</button>
+          </div>
+        </div>
+        
+        <div class="color-section">
+          <div class="color-label" data-i18n="settings.appearance.bodyColor">▶ 蛋体主色</div>
+          <div class="color-palette" id="body-colors"></div>
+        </div>
+        
+        <div class="color-section">
+          <div class="color-label" data-i18n="settings.appearance.outlineColor">▶ 轮廓色</div>
+          <div class="color-palette" id="outline-colors"></div>
+        </div>
+      </div>
+      
+      <!-- General Tab -->
+      <div id="tab-general" class="tab-content">
+        <div class="color-section">
+          <div class="color-label" data-i18n="settings.name.title">▶ 宠物昵称</div>
+          <div class="settings-row">
+            <input type="text" id="pet-name-input" class="settings-input" placeholder="Pet Name" maxlength="12">
+          </div>
+        </div>
+
+        <div class="color-section">
+          <div class="color-label" data-i18n="settings.dnd.title">▶ 免打扰时段</div>
+          <div class="settings-row">
+            <label style="font-size:14px;color:#c8d8c8;">
+              <input type="checkbox" id="dnd-enabled" /> <span data-i18n="settings.dnd.enable">开启免打扰</span>
+            </label>
+            <span style="font-size:14px;color:#c8d8c8;" data-i18n="settings.dnd.start">开始</span>
+            <input type="number" id="dnd-start" min="0" max="23" value="22" style="width:40px;border:2px solid #2a2a4a;padding:2px;background:#fff;font-family:'Segoe UI', sans-serif;font-size:14px;">
+            <span style="font-size:14px;color:#c8d8c8;" data-i18n="settings.dnd.end">结束</span>
+            <input type="number" id="dnd-end" min="0" max="23" value="7" style="width:40px;border:2px solid #2a2a4a;padding:2px;background:#fff;font-family:'Segoe UI', sans-serif;font-size:14px;">
+          </div>
+          <div style="font-size:13px;color:#8a8a9a;margin-top:4px;" data-i18n="settings.dnd.desc">说明：在设定时段内自动静默，降低刷新并禁用气泡提示</div>
+        </div>
+        
+        <div class="color-section">
+          <div class="color-label" data-i18n="settings.window.title">▶ 窗口设置</div>
+          <div class="settings-group">
+             <label style="font-size:14px;color:#c8d8c8;">
+               <input type="checkbox" id="always-on-top" /> <span data-i18n="settings.window.alwaysOnTop">置顶显示</span>
+             </label>
+             <label style="font-size:14px;color:#c8d8c8;">
+               <input type="checkbox" id="show-tray" /> <span data-i18n="settings.window.showTray">显示托盘图标</span>
+             </label>
+          </div>
+        </div>
+        
+        <div class="color-section">
+          <div class="color-label" data-i18n="settings.general.title">▶ 通用设置</div>
+          <div class="settings-group">
+            <div class="settings-row">
+               <span style="font-size:14px;color:#c8d8c8;" data-i18n="settings.general.language">语言</span>
+               <select id="language-select" style="font-size:14px;background:#fff;border:2px solid #2a2a4a;font-family:'Segoe UI', sans-serif;">
+                 <option value="zh-CN">简体中文</option>
+                 <option value="en-US">English</option>
+               </select>
+            </div>
+            <label style="font-size:14px;color:#c8d8c8;">
+              <input type="checkbox" id="notify-enabled" /> <span data-i18n="settings.general.bubble">显示对话气泡</span>
+            </label>
+            <label style="font-size:14px;color:#c8d8c8;">
+              <input type="checkbox" id="toast-enabled" /> <span data-i18n="settings.general.desktop_notify">Windows系统通知</span>
+            </label>
+            <label style="font-size:14px;color:#c8d8c8;">
+              <input type="checkbox" id="autosave-enabled" /> <span data-i18n="settings.general.autosave">自动保存</span>
+            </label>
+            <div class="settings-row">
+              <span style="font-size:14px;color:#c8d8c8;" data-i18n="settings.general.default_mode">默认模式</span>
+              <label style="font-size:14px;color:#c8d8c8;">
+                <input type="radio" name="default-mode" value="roam" checked /> <span data-i18n="modes.roam">漫步</span>
+              </label>
+              <label style="font-size:14px;color:#c8d8c8;">
+                <input type="radio" name="default-mode" value="mischief" /> <span data-i18n="modes.mischief">淘气</span>
+              </label>
+              <label style="font-size:14px;color:#c8d8c8;">
+                <input type="radio" name="default-mode" value="quiet" /> <span data-i18n="modes.quiet">静默</span>
+              </label>
+            </div>
+            <div class="settings-row" style="margin-top: 8px; justify-content: flex-end;">
+               <button class="pixel-btn" id="apply-general-btn" style="font-size:12px; padding: 4px 12px; background:#4a8a4a; border-color:#2a6a2a;" data-i18n="settings.appearance.apply">立即生效</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="button-section">
+        <button class="pixel-btn confirm" id="confirm-btn" data-i18n="settings.general.save">确 认</button>
+        <button class="pixel-btn reset" id="reset-btn" data-i18n="settings.general.reset">重 置</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="./sprites.js"></script>
+  <script src="./pet-generator.js"></script>
+  <script src="./cute-renderer.js"></script>
+  <script src="./settings.js"></script>
+  <script>
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'))
+      
+      const idx = name === 'appearance' ? 0 : 1
+      document.querySelectorAll('.tab')[idx].classList.add('active')
+      document.getElementById('tab-' + name).classList.add('active')
+    }
+  </script>
+</body>
+</html>

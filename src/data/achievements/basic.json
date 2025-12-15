@@ -1,0 +1,66 @@
+[
+  {
+    "id": "first_job",
+    "name": "打工人",
+    "description": "完成第1次打工。",
+    "condition": {
+      "type": "work_count",
+      "target": 1
+    },
+    "reward": {
+      "coins": 50,
+      "exp": 10
+    }
+  },
+  {
+    "id": "workaholic",
+    "name": "工作狂",
+    "description": "累计打工10次。",
+    "condition": {
+      "type": "work_count",
+      "target": 10
+    },
+    "reward": {
+      "coins": 200,
+      "exp": 50
+    }
+  },
+  {
+    "id": "first_study",
+    "name": "好学生",
+    "description": "完成第1次学习。",
+    "condition": {
+      "type": "study_count",
+      "target": 1
+    },
+    "reward": {
+      "exp": 20
+    }
+  },
+  {
+    "id": "scholar",
+    "name": "博学者",
+    "description": "累计学习10次。",
+    "condition": {
+      "type": "study_count",
+      "target": 10
+    },
+    "reward": {
+      "exp": 100,
+      "items": [{ "id": "alien_chip", "count": 1 }]
+    }
+  },
+  {
+    "id": "adventurer",
+    "name": "初级探险家",
+    "description": "完成5次探险。",
+    "condition": {
+      "type": "adventure_count",
+      "target": 5
+    },
+    "reward": {
+      "coins": 100,
+      "items": [{ "id": "golden_feather", "count": 1 }]
+    }
+  }
+]
