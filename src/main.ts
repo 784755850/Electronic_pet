@@ -89,6 +89,7 @@ function createWindow() {
   win = new BrowserWindow({
     width: 120,
     height: 200,
+    icon: path.join(__dirname, '../assets/icon.ico'),
     frame: false,
     transparent: true,
     resizable: false,
@@ -1070,6 +1071,7 @@ function createSettingsWindow() {
   settingsWin = new BrowserWindow({
     width: 420,
     height: 560,
+    icon: path.join(__dirname, '../assets/icon.ico'),
     frame: false,
     transparent: true,
     resizable: false,
@@ -1269,6 +1271,7 @@ function createStatusWindow() {
   statusWin = new BrowserWindow({
     width: 300,
     height: 400,
+    icon: path.join(__dirname, '../assets/icon.ico'),
     frame: false,
     transparent: true,
     resizable: false,

@@ -26,6 +26,9 @@
     "directories": {
       "output": "dist_electron"
     },
+    "win": {
+      "icon": "assets/icon.ico"
+    },
     "compression": "normal",
     "files": [
       "dist/**/*",
