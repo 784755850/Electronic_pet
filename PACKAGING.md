@@ -23,12 +23,24 @@ npm start
 
 ### 安装包（NSIS）
 ```bash
+# 标准打包（已优化压缩速度）
 npm run dist:win
+
+# 极速打包（无压缩，测试用）
+npm run dist:win:fast
 ```
 - 产物目录：`dist_electron/`
 - 包含 `Setup.exe`（安装向导）
-- 自动创建开始菜单快捷方式
-- 支持卸载程序
+- `dist:win` 使用 normal 压缩，兼顾速度与体积
+- `dist:win:fast` 使用 store 存储，速度最快但体积大
+
+### 快速测试（文件夹）
+```bash
+npm run dist:dir
+```
+- 产物目录：`dist_electron/win-unpacked/`
+- 不生成安装包，直接解压到文件夹
+- **最快**的测试方式，秒级完成
 
 ### 便携版（Portable）
 ```bash

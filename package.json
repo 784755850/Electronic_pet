@@ -1,6 +1,8 @@
 {
   "name": "electronic-pet",
   "version": "0.1.0",
+  "description": "A cute desktop electronic pet",
+  "author": "User",
   "private": true,
   "main": "dist/main.js",
   "scripts": {
@@ -8,6 +10,8 @@
     "start": "electron dist/main.js",
     "dev": "tsc -w",
     "dist:win": "electron-builder --win nsis",
+    "dist:win:fast": "electron-builder --win nsis --config.compression=store",
+    "dist:dir": "electron-builder --dir",
     "dist:portable": "electron-builder --win portable",
     "dist:all": "electron-builder -w"
   },
@@ -19,10 +23,10 @@
   },
   "build": {
     "appId": "com.example.electronicpet",
-    "publish": "never",
     "directories": {
       "output": "dist_electron"
     },
+    "compression": "normal",
     "files": [
       "dist/**/*",
       "assets/**/*",

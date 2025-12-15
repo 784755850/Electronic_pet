@@ -23,6 +23,7 @@ Thumbs.db
 # Project specific
 save.json
 *.tsbuildinfo
+dist_electron/
 
 # Env
 .env
