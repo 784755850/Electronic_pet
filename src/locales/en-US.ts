@@ -41,7 +41,26 @@ export default {
     title: "Pet Settings",
     tabs: {
       appearance: "Appearance",
-      general: "General"
+      general: "General",
+      ai: "AI"
+    },
+    ai: {
+      enable: "Enable AI Chat",
+      provider: "Provider",
+      baseUrl: "Base URL",
+      apiKey: "API Key / Token",
+      model: "Model Name",
+      systemPrompt: "System Prompt",
+      temperature: "Temperature",
+      maxHistory: "Max History",
+      test: "Test Connection",
+      help: "Setup Guide",
+      save: "Save AI Settings"
+    },
+    window: {
+      title: "Window Settings",
+      alwaysOnTop: "Always on Top",
+      showTray: "Show Tray Icon"
     },
     appearance: {
       bodyColor: "Body Color",
@@ -181,6 +200,11 @@ export default {
     sleeping: "Sleeping",
     working: "Working",
     studying: "Studying"
+  },
+  chat: {
+    title: "Chat with Pet",
+    send: "Send",
+    placeholder: "Type a message... (Enter to send)"
   },
   tray: {
     tooltip: "{name} - Electronic Pet",
@@ -345,6 +369,7 @@ export default {
       load_error: "Load failed",
       items: {
       status: "Status",
+      chat: "Chat",
       hide: "Hide to Tray",
       alwaysOnTop: "Always on Top",
       feed: "Feed",
@@ -369,6 +394,9 @@ export default {
       bought: "Bought {name}",
       no_money: "Not enough money"
     }
+  },
+  errors: {
+    llm_not_enabled: "AI chat is not enabled. Please enable it in settings."
   },
   jobs: {
     flyer_distributor: "Flyer Distributor",

@@ -45,6 +45,7 @@ if (window.electronAPI) {
 
 const MENU_ITEMS = [
   { labelKey: 'contextMenu.items.status', action: 'status', icon: '📊' },
+  { labelKey: 'contextMenu.items.chat', action: 'chat', icon: '💬' },
   { type: 'separator' },
   { labelKey: 'contextMenu.items.feed', action: 'feed', icon: '🍖' },
   { labelKey: 'contextMenu.items.clean', action: 'clean', icon: '🚿' },
@@ -98,6 +99,9 @@ async function handleAction(item, currentState) {
   switch (item.action) {
     case 'hide':
       window.electronAPI.minimizeToTray();
+      break;
+    case 'chat':
+      window.electronAPI.openChat();
       break;
     case 'alwaysOnTop':
       window.electronAPI.toggleAlwaysOnTop(!currentState);

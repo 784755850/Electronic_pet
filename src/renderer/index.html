@@ -76,6 +76,20 @@
       opacity: 1;
     }
 
+    #exp-display {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      color: #4a4a6a;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 2px 5px;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 15;
+      display: none;
+    }
+
     #progress-bar-container {
       position: absolute;
       bottom: 10px;
@@ -155,6 +169,7 @@
 <body>
   <div id="app">
     <div id="pet-container">
+      <div id="exp-display">Lv.0</div>
       <canvas id="pet-canvas" width="96" height="120" title="点击抚摸"></canvas>
       <div id="status-icon">
         <canvas id="status-canvas" width="24" height="24"></canvas>

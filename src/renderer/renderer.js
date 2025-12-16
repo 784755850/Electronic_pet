@@ -7,6 +7,7 @@
 const petCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById('pet-canvas'))
 const statusCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById('status-canvas'))
 const bubbleEl = document.getElementById('bubble')
+const expDisplay = document.getElementById('exp-display')
 const progressBarContainer = document.getElementById('progress-bar-container')
 const progressBarFill = document.getElementById('progress-bar-fill')
 
@@ -72,6 +73,56 @@ if (petCanvas && CuteRenderer) {
   })
 }
 
+// 动态图标生成器
+const iconCanvas = document.createElement('canvas')
+iconCanvas.width = 64
+iconCanvas.height = 64
+const iconRenderer = /** @type {any} */ (window).CuteRenderer 
+  ? new (/** @type {any} */ (window).CuteRenderer)(iconCanvas, 1) 
+  : null
+
+/** @type {any} */
+let lastIconState = { seed: -1, colorKey: '', stage: '' }
+
+/**
+ * @param {any} pet 
+ * @param {any} colors 
+ */
+function updateAppIcon(pet, colors) {
+  if (!pet || !iconRenderer) return
+  
+  const seed = pet.appearanceSeed || 12345
+  const colorKey = JSON.stringify(colors)
+  const stage = pet.stage
+  
+  // Only update if appearance changed
+  if (lastIconState.seed === seed && 
+      lastIconState.colorKey === colorKey && 
+      lastIconState.stage === stage) {
+    return
+  }
+  
+  lastIconState = { seed, colorKey, stage }
+  
+  // Render static frame
+  // Note: renderPet clears the canvas internally
+  iconRenderer.renderPet(
+    stage,
+    50, // neutral mood
+    false, // not sick
+    false, // not moving
+    1, // direction
+    colors,
+    seed,
+    'idle'
+  )
+  
+  const dataUrl = iconCanvas.toDataURL('image/png')
+  if (api && api.updateAppIcon) {
+    api.updateAppIcon(dataUrl)
+  }
+}
+
 // 更新宠物显示 - 渲染
 function updatePetDisplay() {
   if (!pet || !pixelRenderer) return
@@ -86,6 +137,8 @@ function updatePetDisplay() {
   // 实际上 main process 会发送颜色更新
   // 我们这里尝试从 currentColors 获取，或者 window.SPRITES.themes
   
+  updateAppIcon(pet, colors)
+  
   pixelRenderer.renderPet(
     pet.stage,
     pet.mood || 50,
@@ -93,7 +146,8 @@ function updatePetDisplay() {
     isMoving,
     moveDirection,
     colors,
-    pet.appearanceSeed || 12345
+    pet.appearanceSeed || 12345,
+    pet.currentAction || 'idle'
   )
   
   // 更新状态图标
@@ -141,6 +195,12 @@ function updatePetDisplay() {
     } else {
       statusLabel.classList.remove('show')
     }
+  }
+
+  // 更新经验值显示
+  if (expDisplay) {
+    expDisplay.textContent = `Lv.${pet.level} (${Math.floor(pet.exp)})`
+    expDisplay.style.display = 'block'
   }
 
   // 更新进度条

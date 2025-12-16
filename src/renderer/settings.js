@@ -316,6 +316,99 @@ function setupEventListeners() {
     })
   }
 
+  const saveAiBtn = document.getElementById('save-ai-btn')
+  const providerSelect = /** @type {HTMLSelectElement} */ (document.getElementById('ai-provider'))
+
+  if (providerSelect) {
+    providerSelect.addEventListener('change', updateLLMFields)
+  }
+
+  const helpLink = document.getElementById('ai-help-link')
+  if (helpLink) {
+    helpLink.addEventListener('click', (e) => {
+      e.preventDefault()
+      const providerEl = /** @type {HTMLSelectElement} */ (document.getElementById('ai-provider'))
+      const provider = providerEl ? providerEl.value : 'bailian'
+      
+      let url = ''
+      if (provider === 'bailian') {
+        url = 'https://help.aliyun.com/zh/model-studio/getting-started/first-api-call-to-qwen'
+      } else if (provider === 'openai') {
+         url = 'https://github.com/ollama/ollama/blob/main/docs/openai.md'
+       } 
+       /*
+       else if (provider === 'xiaozhi') {
+         url = 'https://xiaozhi.dev/docs/development/'
+       }
+       */
+       
+       if (url && api && api.openExternal) {
+        api.openExternal(url)
+      }
+    })
+  }
+  
+  if (saveAiBtn) {
+    saveAiBtn.addEventListener('click', () => {
+      saveAllSettings()
+      
+      const originalText = saveAiBtn.textContent
+      saveAiBtn.textContent = 'Saved!'
+      setTimeout(() => {
+        saveAiBtn.textContent = originalText
+      }, 1000)
+    })
+  }
+
+  const testAiBtn = /** @type {HTMLButtonElement} */ (document.getElementById('test-ai-btn'))
+  if (testAiBtn) {
+    testAiBtn.addEventListener('click', async () => {
+        const providerEl = /** @type {HTMLSelectElement} */ (document.getElementById('ai-provider'))
+        const baseUrlEl = /** @type {HTMLInputElement} */ (document.getElementById('ai-baseurl'))
+        const apiKeyEl = /** @type {HTMLInputElement} */ (document.getElementById('ai-apikey'))
+        const modelEl = /** @type {HTMLInputElement} */ (document.getElementById('ai-model'))
+        
+        const provider = providerEl ? providerEl.value : 'bailian'
+        const baseUrl = baseUrlEl ? baseUrlEl.value : ''
+        const apiKey = apiKeyEl ? apiKeyEl.value : ''
+        const model = modelEl ? modelEl.value : ''
+        
+        const originalText = testAiBtn.textContent
+        testAiBtn.textContent = 'Testing...'
+        testAiBtn.disabled = true
+        
+        if (api && api.testLLMConfig) {
+            try {
+              const result = await api.testLLMConfig({
+                  enabled: true,
+                  provider,
+                  baseUrl,
+                  apiKey,
+                  model
+              })
+              
+              if (result.success) {
+                  testAiBtn.textContent = 'Success!'
+                  testAiBtn.style.background = '#4a8a4a'
+              } else {
+                  testAiBtn.textContent = 'Failed'
+                  testAiBtn.style.background = '#8a4a4a'
+                  alert('Connection failed: ' + result.error)
+              }
+            } catch (e) {
+                testAiBtn.textContent = 'Error'
+                testAiBtn.style.background = '#8a4a4a'
+            }
+            
+            setTimeout(() => {
+              testAiBtn.textContent = originalText
+              testAiBtn.style.background = ''
+              testAiBtn.disabled = false
+            }, 2000)
+        }
+    })
+  }
+
   // 语言选择
   const langSelect = /** @type {HTMLSelectElement} */ (document.getElementById('language-select'))
   if (langSelect) {
@@ -399,12 +492,62 @@ function saveAllSettings() {
   if (nameInput && api && api.renamePet) {
     api.renamePet(nameInput.value)
   }
+
+  // Save AI Settings
+  const aiEnabled = /** @type {HTMLInputElement} */ (document.getElementById('ai-enabled'))
+  if (aiEnabled) {
+     const config = {
+       enabled: aiEnabled.checked,
+       provider: /** @type {HTMLSelectElement} */ (document.getElementById('ai-provider')).value,
+       baseUrl: /** @type {HTMLInputElement} */ (document.getElementById('ai-baseurl')).value,
+       apiKey: /** @type {HTMLInputElement} */ (document.getElementById('ai-apikey')).value,
+       model: /** @type {HTMLInputElement} */ (document.getElementById('ai-model')).value,
+       systemPrompt: /** @type {HTMLTextAreaElement} */ (document.getElementById('ai-system-prompt')).value,
+       temperature: parseFloat(/** @type {HTMLInputElement} */ (document.getElementById('ai-temperature')).value),
+       maxHistory: parseInt(/** @type {HTMLInputElement} */ (document.getElementById('ai-max-history')).value)
+     }
+     
+     if (api && api.saveLLMConfig) {
+       api.saveLLMConfig(config)
+     }
+  }
 }
 
 // 保存并关闭
 function saveAndClose() {
   saveAllSettings()
   closeWindow()
+}
+
+function updateLLMFields() {
+  const providerSelect = /** @type {HTMLSelectElement} */ (document.getElementById('ai-provider'))
+  const baseUrlRow = document.getElementById('ai-baseurl-row')
+  const baseUrlInput = /** @type {HTMLInputElement} */ (document.getElementById('ai-baseurl'))
+  const apiKeyLabel = document.querySelector('span[data-i18n="settings.ai.apiKey"]')
+
+  if (!providerSelect) return
+  const provider = providerSelect.value
+  
+  if (provider === 'openai') {
+    if (baseUrlRow) baseUrlRow.style.display = 'flex'
+    if (baseUrlInput && !baseUrlInput.value) baseUrlInput.value = 'http://localhost:11434/v1'
+    if (apiKeyLabel) apiKeyLabel.textContent = 'API Key'
+  } 
+  /*
+  else if (provider === 'xiaozhi') {
+    if (baseUrlRow) baseUrlRow.style.display = 'flex'
+    if (baseUrlInput) {
+       if (!baseUrlInput.value || baseUrlInput.value.includes('localhost')) {
+          baseUrlInput.placeholder = 'wss://api.xiaozhi.me/v1/ws'
+       }
+    }
+    if (apiKeyLabel) apiKeyLabel.textContent = 'Token'
+  } 
+  */
+  else {
+    if (baseUrlRow) baseUrlRow.style.display = 'none'
+    if (apiKeyLabel) apiKeyLabel.textContent = 'API Key'
+  }
 }
 
 // 加载当前设置
@@ -471,6 +614,34 @@ function loadCurrentSettings() {
     })
   }
   
+  if (api && api.getLLMConfig) {
+    api.getLLMConfig().then((/** @type {any} */ config) => {
+      if (config) {
+        const enabled = /** @type {HTMLInputElement} */ (document.getElementById('ai-enabled'))
+        const provider = /** @type {HTMLSelectElement} */ (document.getElementById('ai-provider'))
+        const baseUrl = /** @type {HTMLInputElement} */ (document.getElementById('ai-baseurl'))
+        const apiKey = /** @type {HTMLInputElement} */ (document.getElementById('ai-apikey'))
+        const model = /** @type {HTMLInputElement} */ (document.getElementById('ai-model'))
+        const prompt = /** @type {HTMLTextAreaElement} */ (document.getElementById('ai-system-prompt'))
+        const temp = /** @type {HTMLInputElement} */ (document.getElementById('ai-temperature'))
+        const history = /** @type {HTMLInputElement} */ (document.getElementById('ai-max-history'))
+        
+        if (enabled) enabled.checked = !!config.enabled
+        if (provider) {
+          provider.value = config.provider || 'bailian'
+          // Trigger update to show/hide fields
+          updateLLMFields()
+        }
+        if (baseUrl) baseUrl.value = config.baseUrl || ''
+        if (apiKey) apiKey.value = config.apiKey || ''
+        if (model) model.value = config.model || 'qwen-turbo'
+        if (prompt) prompt.value = config.systemPrompt || ''
+        if (temp) temp.value = (config.temperature ?? 0.7).toString()
+        if (history) history.value = (config.maxHistory ?? 10).toString()
+      }
+    })
+  }
+
   if (api && api.getPet) {
     api.getPet().then((/** @type {any} */ pet) => {
       const nameInput = /** @type {HTMLInputElement} */ (document.getElementById('pet-name-input'))

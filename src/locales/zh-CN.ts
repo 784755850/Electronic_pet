@@ -41,7 +41,26 @@ export default {
     title: "宠物设置",
     tabs: {
       appearance: "外观",
-      general: "常规"
+      general: "常规",
+      ai: "智能"
+    },
+    ai: {
+      enable: "启用 AI 对话",
+      provider: "服务商",
+      baseUrl: "API 地址 (Base URL)",
+      apiKey: "API Key / Token",
+      model: "模型名称",
+      systemPrompt: "系统提示词 (Persona)",
+      temperature: "随机性 (Temperature)",
+      maxHistory: "最大历史消息数",
+      test: "测试连接",
+      help: "配置指南",
+      save: "保存 AI 设置"
+    },
+    window: {
+      title: "窗口设置",
+      alwaysOnTop: "置顶显示",
+      showTray: "显示托盘图标"
     },
     appearance: {
       bodyColor: "蛋体主色",
@@ -178,6 +197,9 @@ export default {
     programmer: "程序员",
     thief: "侠盗"
   },
+  errors: {
+    llm_not_enabled: "AI 对话未启用，请在设置中开启。"
+  },
   studies: {
     kindergarten_basic: "幼儿园基础",
     primary_school_math: "小学数学",
@@ -219,6 +241,11 @@ export default {
     Study: "学习",
     Shop: "商店",
     Inventory: "背包"
+  },
+  chat: {
+    title: "与小Q聊天",
+    send: "发送",
+    placeholder: "输入消息... (Enter发送)"
   },
   tray: {
     tooltip: "{name} - 电子宠物",
@@ -374,7 +401,7 @@ export default {
     }
   },
   contextMenu: {
-    title: "菜单",
+    title: "电子宠物",
     select: "选择 {label}",
     loading: "加载中...",
     no_jobs: "暂无工作",
@@ -384,10 +411,11 @@ export default {
     load_error: "加载失败",
     items: {
       status: "状态面板",
+      chat: "聊天对话",
       hide: "隐藏到托盘",
       alwaysOnTop: "置顶显示",
-      feed: "喂食",
-      clean: "洗澡",
+      feed: "喂食 (物品)",
+      clean: "清洁 (物品)",
       play: "玩耍",
       adventure: "探险",
       work: "打工",

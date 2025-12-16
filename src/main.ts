@@ -1,6 +1,6 @@
-import {app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, globalShortcut, Notification, screen} from 'electron'
+import {app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, globalShortcut, Notification, screen, shell} from 'electron'
 import path from 'path'
-import { loadGame, saveGame, startAutoSave, stopAutoSave, setTestMode, clearTestSave, createDefaultPlayer } from './storage'
+import { loadGame, saveGame, startAutoSave, stopAutoSave, setTestMode, clearTestSave, createDefaultPlayer, saveLLMConfig } from './storage'
 import { tick, checkEvolution, feed as feedPet, clean as cleanPet, play as playPet, applyPendingEffects, pet_pet, createPet } from './core/pet'
 import { getDialog } from './core/events'
 import { completeWork, completeStudy, startWork, startStudy, getAvailableJobs, getStudies, getItems, buyItem, useItem } from './core/economy'
@@ -9,13 +9,16 @@ import { AchievementSystem } from './core/achievement'
 import { addExp } from './core/growth'
 import { i18n } from './core/i18n'
 import { dataLoader } from './core/data-loader'
+import { LLMService } from './core/llm'
+import { XiaoZhiClient } from './core/xiaozhi-client'
 import * as movement from './app/movement'
 import * as modeDetection from './app/modeDetection'
-import type { Pet, Player, ColorTheme, PetColors } from './types/index'
+import type { Pet, Player, ColorTheme, PetColors, PetAction } from './types/index'
 
 let win: BrowserWindow | null = null
 let settingsWin: BrowserWindow | null = null
 let statusWin: BrowserWindow | null = null
+let chatWin: BrowserWindow | null = null
 let trayOverlayWin: BrowserWindow | null = null
 let debugWin: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -23,6 +26,8 @@ let tray: Tray | null = null
 // 游戏状态
 let pet: Pet
 let player: Player
+let llmService: LLMService
+let xiaozhiClient: XiaoZhiClient | null = null
 
 // Test Mode State
 let isTestMode = false
@@ -255,6 +260,99 @@ function checkAutomation() {
   }
 }
 
+function initXiaoZhi() {
+  if (xiaozhiClient) {
+    xiaozhiClient.disconnect()
+    xiaozhiClient = null
+  }
+
+  const llmConfig = player.settings.llm
+  if (llmConfig && llmConfig.provider === 'xiaozhi' && llmConfig.baseUrl && llmConfig.apiKey) {
+    xiaozhiClient = new XiaoZhiClient({
+      url: llmConfig.baseUrl,
+      token: llmConfig.apiKey
+    })
+
+    xiaozhiClient.on('ready', () => {
+      sendBubble('已连接到小智 AI')
+    })
+
+    xiaozhiClient.on('llm_text', (text: string) => {
+       // Check for Emoji commands in text
+       // Simple regex for emoji
+       const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu
+       const emojis = text.match(emojiRegex)
+       
+       if (emojis && emojis.length > 0) {
+          handleEmojiCommand(emojis[0])
+       }
+       
+       // Also show bubble with text (stripping emoji if needed, or keeping it)
+       // sendBubble(text) // Optional: display what XiaoZhi says
+    })
+    
+    xiaozhiClient.on('error', (err) => {
+      // console.error('XiaoZhi Error', err)
+    })
+
+    xiaozhiClient.connect()
+  }
+}
+
+function handleEmojiCommand(emoji: string) {
+  // Mapping logic from docs/XIAOZHI_INTEGRATION.md
+  // 😊/😄/😁 -> playing
+  // 💤/😴 -> sleep
+  // 🍎/🍔/🍗 -> eating
+  // 💼/👔 -> work
+  // 📚/📖 -> study
+  // 🛁/🧼 -> cleaning
+  // 😢/😭 -> mood down (idle)
+  
+  if (pet.currentAction !== 'idle' && pet.currentAction !== 'sleep') return // Busy
+  
+  let action: string | null = null
+  let moodChange = 0
+  
+  if (['😊','😄','😁','❤️','🥰'].includes(emoji)) {
+     action = 'playing'
+     moodChange = 10
+  } else if (['💤','😴'].includes(emoji)) {
+     action = 'sleep'
+  } else if (['🍎','🍔','🍗','🍕'].includes(emoji)) {
+     action = 'eating'
+  } else if (['💼','👔'].includes(emoji)) {
+     action = 'work'
+  } else if (['📚','📖'].includes(emoji)) {
+     action = 'study'
+  } else if (['🛁','🧼'].includes(emoji)) {
+     action = 'cleaning'
+  } else if (['😢','😭','😞'].includes(emoji)) {
+     moodChange = -10
+  }
+  
+  if (moodChange !== 0) {
+    pet.mood = Math.min(100, Math.max(0, pet.mood + moodChange))
+  }
+  
+  if (action) {
+     pet.currentAction = action as PetAction
+     
+     // Set duration for action
+     if (action === 'sleep') {
+        // Sleep until health full or manual wake
+        // For XiaoZhi trigger, maybe just a short nap or until next command?
+        // Let's treat it as a state switch.
+     } else {
+        // Temporary actions
+        pet.actionEndsAt = Date.now() + 5000 // 5 seconds animation
+        pet.actionTotalDuration = 5000
+     }
+     
+     broadcastUpdate(pet, player)
+  }
+}
+
 function broadcastUpdate(pet: Pet, player: Player) {
   win?.webContents.send('pet-update', pet)
   // Send full data to status window as it expects {pet, player}
@@ -413,6 +511,26 @@ function setupIPC() {
       movement.start(win)
     }
   })
+
+  ipcMain.on('update-icon', (_event, dataUrl: string) => {
+    try {
+      const image = nativeImage.createFromDataURL(dataUrl)
+      if (tray) {
+        tray.setImage(image)
+      }
+      if (win) {
+        win.setIcon(image)
+      }
+    } catch (e) {
+      console.error('Failed to update icon:', e)
+    }
+  })
+
+  // 退出游戏
+  ipcMain.on('quit-app', () => {
+    saveGame(pet, player)
+    app.quit()
+  })
   
   ipcMain.on('minimize-to-tray', () => {
     if (player.settings.showTrayIcon === false) {
@@ -498,6 +616,10 @@ function setupIPC() {
       statusWin.close()
       statusWin = null
     }
+  })
+
+  ipcMain.handle('open-external', (_event, url) => {
+    shell.openExternal(url)
   })
 
   ipcMain.on('refresh-status', (_event) => {
@@ -1059,6 +1181,97 @@ function setupIPC() {
   ipcMain.on('open-adventure', () => {
     createAdventureWindow()
   })
+
+  ipcMain.on('open-chat', () => {
+    createChatWindow()
+  })
+
+  ipcMain.handle('llm-chat', async (_event, messages) => {
+    if (!player.settings.llm?.enabled) {
+      throw new Error('LLM not enabled')
+    }
+    return await llmService.chat(messages)
+  })
+  
+  ipcMain.handle('get-llm-config', () => {
+    return player.settings.llm || {
+        enabled: false,
+        provider: 'bailian',
+        apiKey: '',
+        model: 'qwen-turbo',
+        systemPrompt: '你是桌面宠物小Q，性格活泼可爱。'
+    }
+  })
+  
+  ipcMain.on('save-llm-config', (_event, config) => {
+    player.settings.llm = config
+    llmService.updateConfig(config)
+    // initXiaoZhi()
+    
+    // Save to separate config file
+    saveLLMConfig(config)
+    
+    // Also save game data (though LLM config is now redundant here, we keep it for now)
+    saveGame(pet, player)
+    sendBubble('LLM设置已保存')
+  })
+
+  ipcMain.handle('test-llm-config', async (_event, config) => {
+    try {
+      /*
+      if (config.provider === 'xiaozhi') {
+          // Test XiaoZhi Connection
+          return new Promise((resolve) => {
+              const client = new XiaoZhiClient({
+                  url: config.baseUrl,
+                  token: config.apiKey
+              })
+              
+              let resolved = false
+              
+              client.on('ready', () => {
+                  if (!resolved) {
+                      resolved = true
+                      client.disconnect()
+                      resolve({ success: true })
+                  }
+              })
+              
+              client.on('error', (err: any) => {
+                  if (!resolved) {
+                      resolved = true
+                      client.disconnect()
+                      resolve({ success: false, error: err.message || 'Connection failed' })
+                  }
+              })
+              
+              client.connect()
+              
+              // Timeout
+              setTimeout(() => {
+                  if (!resolved) {
+                      resolved = true
+                      client.disconnect()
+                      resolve({ success: false, error: 'Connection timeout' })
+                  }
+              }, 5000)
+          })
+      } else {
+      */
+          // Create a temporary service to test the config
+          const tempService = new LLMService(config);
+          // Try to send a simple hello message
+          // We use a very short message to minimize cost/time
+          await tempService.chat([{ role: 'user', content: 'Hi' }]);
+          return { success: true };
+      /*
+      }
+      */
+    } catch (error: any) {
+      console.error('LLM Test Error:', error);
+      return { success: false, error: error.message || 'Unknown error' };
+    }
+  })
 }
 
 // 创建设置窗口
@@ -1290,6 +1503,34 @@ function createStatusWindow() {
   
   statusWin.on('closed', () => {
     statusWin = null
+  })
+}
+
+function createChatWindow() {
+  if (chatWin) {
+    chatWin.focus()
+    return
+  }
+  
+  chatWin = new BrowserWindow({
+    width: 350,
+    height: 500,
+    title: i18n.t('chat.title') || 'Chat',
+    icon: path.join(__dirname, '../assets/icon.ico'),
+    autoHideMenuBar: true,
+    alwaysOnTop: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  })
+  
+  const chatPath = path.join(__dirname, '..', 'src', 'renderer', 'chat.html')
+  chatWin.loadFile(chatPath)
+  
+  chatWin.on('closed', () => {
+    chatWin = null
   })
 }
 
@@ -1602,7 +1843,7 @@ function formatLeft(ms: number) {
   return `${s}s`
 }
 app.whenReady().then(() => {
-  app.setAppUserModelId('com.example.electronicpet')
+  app.setAppUserModelId('com.electronicpet.app')
   // 加载游戏数据
   const gameData = loadGame()
   pet = gameData.pet
@@ -1612,6 +1853,17 @@ app.whenReady().then(() => {
   if (player.settings.language) {
     i18n.setLocale(player.settings.language)
   }
+
+  // 初始化LLM服务
+  llmService = new LLMService(player.settings.llm || {
+    enabled: false,
+    apiKey: '',
+    model: 'qwen-turbo',
+    provider: 'bailian'
+  })
+
+  // 初始化小智
+  initXiaoZhi()
 
   console.log('游戏数据加载完成:')
   console.log(`宠物: ${pet.name}, Lv.${pet.level}`)

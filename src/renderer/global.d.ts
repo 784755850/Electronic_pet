@@ -46,6 +46,12 @@ declare global {
       getAdventureLocations: () => Promise<any[]>;
       startAdventure: (locationId: string) => Promise<any>;
       openAdventure: () => void;
+      // LLM
+      openChat: () => void;
+      llmChat: (messages: any[]) => Promise<string>;
+      getLLMConfig: () => Promise<any>;
+      saveLLMConfig: (config: any) => void;
+      testLLMConfig: (config: any) => Promise<{ success: boolean; error?: string }>;
       getI18n: () => Promise<any>;
       getI18nData: () => Promise<any>;
       setLanguage: (lang: string) => void;

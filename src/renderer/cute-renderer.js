@@ -95,8 +95,9 @@ class CuteRenderer {
    * @param {number} direction 
    * @param {any} [colors] 
    * @param {number} [seed] 
+   * @param {string} [action]
    */
-  renderPet(stage, mood, sick, isMoving, direction, colors, seed = 12345) {
+  renderPet(stage, mood, sick, isMoving, direction, colors, seed = 12345, action = 'idle') {
     const ctx = this.ctx
     if (!ctx) return
     const w = this.canvas.width
@@ -111,7 +112,15 @@ class CuteRenderer {
     
     // 呼吸动画
     const breath = Math.sin(this.frame * 0.05) * 2
-    const bounce = isMoving ? Math.abs(Math.sin(this.frame * 0.2)) * 6 : 0
+    // 如果是睡觉，呼吸慢一点
+    const breathSpeed = action === 'sleep' ? 0.02 : 0.05
+    const breathAmp = action === 'sleep' ? 3 : 2
+    const currentBreath = Math.sin(this.frame * breathSpeed) * breathAmp
+
+    // 动作相关的额外动画
+    let bounce = isMoving ? Math.abs(Math.sin(this.frame * 0.2)) * 6 : 0
+    if (action === 'playing') bounce += Math.abs(Math.sin(this.frame * 0.3)) * 4
+    if (action === 'work') bounce += Math.sin(this.frame * 0.5) * 1 // 工作时微微颤抖
     
     // 颜色处理
     const baseColor = colors?.mid || '#8a8aaa'
@@ -123,14 +132,16 @@ class CuteRenderer {
     ctx.scale(direction, 1) // 左右翻转
 
     if (stage === 'egg') {
-      this.drawEgg(ctx, baseColor, darkColor, lightColor, breath)
+      this.drawEgg(ctx, baseColor, darkColor, lightColor, currentBreath, seed)
       ctx.restore()
       return
     }
 
     if (stage === 'baby') {
       ctx.scale(0.8, 0.8) // 幼年期比较小
-      // 幼年期可能没有配饰，或者身体比较圆
+      // 调整：幼年期头身比例，让它看起来更像“幼年”
+      // 这里通过调整 offset 来实现
+      ctx.translate(0, 5)
     }
 
     // 绘制身体
@@ -140,17 +151,40 @@ class CuteRenderer {
     ctx.lineJoin = 'round'
     ctx.lineCap = 'round'
 
-    this.drawBody(ctx, f.bodyType, breath)
+    this.drawBody(ctx, f.bodyType, currentBreath)
     
     // 绘制耳朵
-    this.drawEars(ctx, f.earType, breath, baseColor, darkColor)
+    this.drawEars(ctx, f.earType, currentBreath, baseColor, darkColor)
 
     // 绘制五官
-    this.drawFace(ctx, f.eyeType, mood, sick, breath, darkColor, lightColor)
+    this.drawFace(ctx, f.eyeType, mood, sick, currentBreath, darkColor, lightColor, action)
 
     // 绘制配件
     if (f.accessory >= 0) {
-      this.drawAccessory(ctx, f.accessory, breath)
+      this.drawAccessory(ctx, f.accessory, currentBreath)
+    }
+
+    // 绘制动作道具 (在身体上层)
+    if (action === 'eating') {
+      this.drawFood(ctx, currentBreath)
+    } else if (action === 'study') {
+      this.drawBook(ctx, currentBreath)
+    } else if (action === 'work') {
+      this.drawWorkIcon(ctx, currentBreath)
+    }
+
+    ctx.restore()
+
+    // 绘制环境/漂浮物 (不需要左右翻转的部分，或者需要独立翻转)
+    ctx.save()
+    ctx.translate(cx, cy - bounce)
+    
+    if (action === 'cleaning') {
+        this.drawBubbles(ctx, currentBreath)
+    } else if (action === 'playing') {
+        this.drawBall(ctx, currentBreath, direction)
+    } else if (action === 'sleep') {
+        this.drawZzz(ctx, currentBreath, direction)
     }
 
     ctx.restore()
@@ -231,8 +265,9 @@ class CuteRenderer {
    * @param {string} darkColor
    * @param {string} lightColor
    * @param {number} breath
+   * @param {number} [seed]
    */
-  drawEgg(ctx, baseColor, darkColor, lightColor, breath) {
+  drawEgg(ctx, baseColor, darkColor, lightColor, breath, seed = 12345) {
     ctx.fillStyle = baseColor
     ctx.strokeStyle = darkColor
     ctx.lineWidth = 3
@@ -241,13 +276,27 @@ class CuteRenderer {
     ctx.fill()
     ctx.stroke()
     
-    // 斑点/花纹
+    // 使用 seed 来决定蛋的花纹，使其暗示未来的特征
+    const f = this.getFeatures(seed)
+    
     ctx.fillStyle = darkColor
-    ctx.globalAlpha = 0.1
+    ctx.globalAlpha = 0.2
     ctx.beginPath()
-    ctx.arc(-10, -10, 5, 0, Math.PI * 2)
-    ctx.arc(15, 5, 8, 0, Math.PI * 2)
-    ctx.arc(-5, 15, 4, 0, Math.PI * 2)
+    
+    if (f.bodyType === 1) { // 椭圆身 - 横条纹
+        ctx.rect(-20, -10, 40, 5)
+        ctx.rect(-22, 5, 44, 5)
+    } else if (f.bodyType === 2) { // 梨形身 - 波浪纹
+        // 简化为圆点
+        ctx.arc(0, 0, 8, 0, Math.PI * 2)
+        ctx.arc(0, 15, 5, 0, Math.PI * 2)
+        ctx.arc(0, -15, 5, 0, Math.PI * 2)
+    } else { // 圆形身 - 斑点
+        ctx.arc(-10, -10, 5, 0, Math.PI * 2)
+        ctx.arc(15, 5, 8, 0, Math.PI * 2)
+        ctx.arc(-5, 15, 4, 0, Math.PI * 2)
+    }
+    
     ctx.fill()
     ctx.globalAlpha = 1.0
     
@@ -329,12 +378,25 @@ class CuteRenderer {
    * @param {number} breath
    * @param {string} color
    * @param {string} highlight
+   * @param {string} [action]
    */
-  drawFace(ctx, type, mood, sick, breath, color, highlight) {
+  drawFace(ctx, type, mood, sick, breath, color, highlight, action = 'idle') {
     // 眼睛
     const eyeY = -5 + breath * 0.5
     
-    if (sick) {
+    if (action === 'sleep') {
+       // 闭眼睡觉
+       ctx.strokeStyle = color
+       ctx.lineWidth = 2
+       ctx.beginPath()
+       // 左眼
+       ctx.moveTo(-18, eyeY)
+       ctx.quadraticCurveTo(-12, eyeY + 3, -6, eyeY)
+       // 右眼
+       ctx.moveTo(6, eyeY)
+       ctx.quadraticCurveTo(12, eyeY + 3, 18, eyeY)
+       ctx.stroke()
+    } else if (sick) {
       // 生病眼 xx
       ctx.strokeStyle = color
       ctx.lineWidth = 2
@@ -393,7 +455,11 @@ class CuteRenderer {
     ctx.beginPath()
     const mouthY = 8 + breath * 0.5
     
-    if (sick || mood < 30) {
+    if (action === 'eating') {
+       // 咀嚼
+       const chew = Math.abs(Math.sin(this.frame * 0.2)) * 3
+       ctx.ellipse(0, mouthY, 5, 2 + chew, 0, 0, Math.PI * 2)
+    } else if (sick || mood < 30) {
       // 难过
       ctx.arc(0, mouthY + 5, 4, Math.PI, 0)
     } else if (mood > 70) {
@@ -448,6 +514,183 @@ class CuteRenderer {
       ctx.quadraticCurveTo(0, y + 10, 15, y)
       ctx.stroke()
     }
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} breath
+   */
+  drawFood(ctx, breath) {
+    const y = 20 + breath
+    // Simple apple/food
+    ctx.fillStyle = '#ff6b6b'
+    ctx.strokeStyle = '#4a4a6a'
+    ctx.lineWidth = 2
+    
+    // Move food towards mouth
+    const offset = Math.sin(this.frame * 0.2) * 5
+    
+    ctx.beginPath()
+    ctx.arc(15 + offset, y - 5, 8, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.stroke()
+    
+    // Leaf
+    ctx.fillStyle = '#4ecdc4'
+    ctx.beginPath()
+    ctx.ellipse(15 + offset, y - 13, 3, 5, 0.5, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} breath
+   */
+  drawBubbles(ctx, breath) {
+    ctx.strokeStyle = '#4ecdc4'
+    ctx.fillStyle = 'rgba(78, 205, 196, 0.3)'
+    ctx.lineWidth = 1
+    
+    for (let i = 0; i < 3; i++) {
+        const t = (this.frame * 0.05 + i * 2) % 10
+        const y = -20 - t * 5
+        const x = Math.sin(t + i) * 10
+        const s = (Math.sin(t) + 2) * 2
+        
+        if (t < 8) {
+            ctx.beginPath()
+            ctx.arc(x, y, s, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.stroke()
+        }
+    }
+    
+    // Sponge/Brush
+    const bx = Math.sin(this.frame * 0.1) * 20
+    ctx.fillStyle = '#ffe66d'
+    ctx.strokeStyle = '#4a4a6a'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.rect(bx - 10, 10 + breath, 20, 15)
+    ctx.fill()
+    ctx.stroke()
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} breath
+   * @param {number} direction
+   */
+  drawBall(ctx, breath, direction) {
+    const t = this.frame * 0.1
+    const x = Math.sin(t) * 30 * direction // Move left right
+    const y = Math.abs(Math.cos(t)) * -30 + 30 // Bounce
+    
+    ctx.fillStyle = '#ff6b6b'
+    ctx.strokeStyle = '#4a4a6a'
+    ctx.lineWidth = 2
+    
+    ctx.beginPath()
+    ctx.arc(x, y, 8, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.stroke()
+    
+    // Stripe
+    ctx.beginPath()
+    ctx.moveTo(x - 8, y)
+    ctx.lineTo(x + 8, y)
+    ctx.stroke()
+  }
+  
+  /**
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} breath
+   */
+  drawWorkIcon(ctx, breath) {
+    // Briefcase
+    const y = 15 + breath
+    ctx.fillStyle = '#556270'
+    ctx.strokeStyle = '#4a4a6a'
+    ctx.lineWidth = 2
+    
+    ctx.beginPath()
+    ctx.rect(15, y, 20, 15)
+    ctx.fill()
+    ctx.stroke()
+    
+    // Handle
+    ctx.beginPath()
+    ctx.moveTo(20, y)
+    ctx.lineTo(20, y - 3)
+    ctx.lineTo(30, y - 3)
+    ctx.lineTo(30, y)
+    ctx.stroke()
+    
+    // Sweat drop
+    if (this.frame % 60 < 30) {
+        ctx.fillStyle = '#4ecdc4'
+        ctx.beginPath()
+        ctx.arc(-25, -20 + breath, 3, 0, Math.PI * 2)
+        ctx.fill()
+    }
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} breath
+   */
+  drawBook(ctx, breath) {
+    // Glasses
+    const y = -5 + breath * 0.5
+    ctx.strokeStyle = '#4a4a6a'
+    ctx.lineWidth = 2
+    
+    ctx.beginPath()
+    ctx.arc(-12, y, 6, 0, Math.PI * 2)
+    ctx.arc(12, y, 6, 0, Math.PI * 2)
+    ctx.moveTo(-6, y)
+    ctx.lineTo(6, y)
+    ctx.stroke()
+    
+    // Book
+    const by = 25 + breath
+    ctx.fillStyle = '#fff'
+    ctx.strokeStyle = '#4a4a6a'
+    
+    ctx.beginPath()
+    ctx.moveTo(-15, by)
+    ctx.lineTo(15, by)
+    ctx.lineTo(15, by + 10)
+    ctx.lineTo(-15, by + 10)
+    ctx.closePath()
+    ctx.fill()
+    ctx.stroke()
+    
+    ctx.beginPath()
+    ctx.moveTo(0, by)
+    ctx.lineTo(0, by + 10)
+    ctx.stroke()
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} breath
+   * @param {number} direction
+   */
+  drawZzz(ctx, breath, direction) {
+     ctx.fillStyle = '#4a4a6a'
+     ctx.font = 'bold 20px Arial'
+     
+     const t = (this.frame * 0.05) % 3
+     const alpha = 1 - (t / 3)
+     const y = -30 - t * 10
+     const x = 20 * direction + Math.sin(t) * 5
+     
+     ctx.globalAlpha = alpha
+     ctx.fillText('Z', x, y)
+     ctx.font = 'bold 15px Arial'
+     ctx.fillText('z', x + 10, y - 10)
+     ctx.globalAlpha = 1.0
   }
 }
 

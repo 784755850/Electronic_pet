@@ -1,5 +1,6 @@
 {
   "name": "electronic-pet",
+  "productName": "Electronic Pet",
   "version": "0.1.0",
   "description": "A cute desktop electronic pet",
   "author": "User",
@@ -22,7 +23,7 @@
     "typescript": "^5.6.3"
   },
   "build": {
-    "appId": "com.example.electronicpet",
+    "appId": "com.electronicpet.app",
     "directories": {
       "output": "dist_electron"
     },
@@ -35,11 +36,25 @@
       "assets/**/*",
       "src/renderer/**/*"
     ],
+    "extraFiles": [
+      {
+        "from": "data",
+        "to": "data",
+        "filter": ["**/*"]
+      }
+    ],
     "nsis": {
       "oneClick": false,
       "perMachine": false,
       "allowElevation": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "guid": "53ab5480-e83c-41c8-8952-01e46d987654",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
     }
+  },
+  "dependencies": {
+    "@types/ws": "^8.18.1",
+    "ws": "^8.18.3"
   }
 }

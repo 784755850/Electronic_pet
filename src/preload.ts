@@ -99,6 +99,11 @@ const electronAPI = {
   popTray: () => {
     ipcRenderer.send('pop-tray')
   },
+
+  // 更新应用图标
+  updateAppIcon: (dataUrl: string) => {
+    ipcRenderer.send('update-icon', dataUrl)
+  },
   
   renamePet: (name: any) => {
     ipcRenderer.send('rename-pet', name)
@@ -161,6 +166,13 @@ const electronAPI = {
   startAdventure: (locationId: string) => ipcRenderer.invoke('start-adventure', locationId),
   openAdventure: () => ipcRenderer.send('open-adventure'),
 
+  // LLM
+  openChat: () => ipcRenderer.send('open-chat'),
+  llmChat: (messages: any[]) => ipcRenderer.invoke('llm-chat', messages),
+  getLLMConfig: () => ipcRenderer.invoke('get-llm-config'),
+  saveLLMConfig: (config: any) => ipcRenderer.send('save-llm-config', config),
+  testLLMConfig: (config: any) => ipcRenderer.invoke('test-llm-config', config),
+
   // I18n
   getI18n: async () => {
     const res = await ipcRenderer.invoke('get-i18n')
@@ -191,6 +203,8 @@ const electronAPI = {
   getAlwaysOnTop: () => ipcRenderer.invoke('get-always-on-top'),
   
   getAppInfo: () => ipcRenderer.invoke('get-app-info'),
+  
+  openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
   
   resetGame: () => ipcRenderer.send('reset-game'),
 };

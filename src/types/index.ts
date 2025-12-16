@@ -128,7 +128,17 @@ export interface Player {
       start: number
       end: number
     }
+    llm?: {
+    enabled?: boolean
+    provider?: 'bailian' | 'openai' | 'xiaozhi' // 'openai' supports Ollama, LM Studio, etc.
+    baseUrl?: string // For local/custom providers, or XiaoZhi WebSocket URL
+    apiKey: string // For XiaoZhi, this is the Bearer token
+    model: string
+    systemPrompt?: string
+    temperature?: number // 0.0 - 2.0
+    maxHistory?: number // 0-50
   }
+}
 }
 
 export interface Job {
